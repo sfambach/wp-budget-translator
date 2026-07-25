@@ -1,0 +1,62 @@
+.bt-admin__grid {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 280px;
+	gap: 24px;
+	align-items: start;
+	margin-top: 16px;
+}
+
+.bt-admin__side .bt-card {
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	padding: 16px 18px;
+	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+
+.bt-stats {
+	margin: 0 0 12px;
+	padding: 0;
+	list-style: none;
+}
+
+.bt-stats li {
+	margin: 0 0 8px;
+}
+
+.bt-lang-checks {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+	gap: 6px 12px;
+	max-width: 720px;
+}
+
+.bt-job-status {
+	margin-top: 12px;
+	padding: 8px 12px;
+	background: #f6f7f7;
+	border-left: 4px solid #2271b1;
+}
+
+.bt-review-filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+	margin: 16px 0;
+}
+
+.bt-review-table textarea {
+	width: 100%;
+	min-width: 220px;
+}
+
+.bt-review-table .bt-source {
+	max-width: 280px;
+	vertical-align: top;
+}
+
+@media (max-width: 960px) {
+	.bt-admin__grid {
+		grid-template-columns: 1fr;
+	}
+}

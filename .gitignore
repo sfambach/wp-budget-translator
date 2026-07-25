@@ -1,0 +1,15 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+*.log
+
+# Composer / vendor if added later
+/vendor/
+/composer.lock
+
+# Local env
+.env
+.env.*
