@@ -51,6 +51,7 @@ $base_url = admin_url( 'admin.php?page=budget-translator-review' );
 	</form>
 
 	<p>
+		<a class="button button-primary" href="<?php echo esc_url( admin_url( 'admin.php?page=budget-translator-focus' ) ); ?>"><?php echo esc_html__( 'Review one by one', 'budget-translator' ); ?></a>
 		<button type="button" class="button" id="bt-confirm-selected"><?php echo esc_html__( 'Confirm selected', 'budget-translator' ); ?></button>
 		<button type="button" class="button" id="bt-purge-invalid"><?php echo esc_html__( 'Remove invalid API messages', 'budget-translator' ); ?></button>
 		<span class="description"><?php printf( esc_html__( '%d segments', 'budget-translator' ), (int) $result['total'] ); ?></span>
@@ -87,6 +88,7 @@ $base_url = admin_url( 'admin.php?page=budget-translator-review' );
 						<td><code><?php echo esc_html( (string) $row->target_lang ); ?></code></td>
 						<td class="bt-status"><?php echo esc_html( (string) $row->status ); ?></td>
 						<td>
+							<a class="button button-small" href="<?php echo esc_url( admin_url( 'admin.php?page=budget-translator-focus&bt_id=' . (int) $row->id ) ); ?>"><?php echo esc_html__( 'Open', 'budget-translator' ); ?></a>
 							<button type="button" class="button button-small bt-save-row"><?php echo esc_html__( 'Save', 'budget-translator' ); ?></button>
 							<button type="button" class="button button-small bt-confirm-row"><?php echo esc_html__( 'Confirm', 'budget-translator' ); ?></button>
 							<button type="button" class="button button-small bt-retranslate-row"><?php echo esc_html__( 'Retranslate', 'budget-translator' ); ?></button>

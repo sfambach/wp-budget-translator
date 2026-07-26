@@ -207,4 +207,112 @@
 			}
 		});
 	})();
+	// Focus (single item) review mode.
+	(function () {
+		var $card = $('#bt-focus-card');
+		if (!$card.length) {
+			return;
+		}
+
+		var lang = String($('.bt-focus').data('lang') || '');
+
+		function focusUrl(id) {
+			var url = btAdmin.focusUrl + (btAdmin.focusUrl.indexOf('?') >= 0 ? '&' : '?') + 'bt_id=' + encodeURIComponent(id);
+			if (lang) {
+				url += '&bt_lang=' + encodeURIComponent(lang);
+			}
+			return url;
+		}
+
+		function goNext(nextId) {
+			if (nextId) {
+				window.location.href = focusUrl(nextId);
+				return;
+			}
+			notify(btAdmin.i18n.allDone);
+			window.setTimeout(function () {
+				window.location.href = focusUrl('');
+			}, 500);
+		}
+
+		function payload(status) {
+			return JSON.stringify({
+				source_text: $('#bt-focus-source').val(),
+				translated_text: $('#bt-focus-translated').val(),
+				status: status,
+				lang: lang
+			});
+		}
+
+		$('.bt-focus-save').on('click', function () {
+			var id = $card.data('id');
+			$.ajax({
+				url: btAdmin.restUrl + 'translations/' + id,
+				method: 'POST',
+				headers: headers(),
+				data: payload('edited'),
+				success: function (res) {
+					$card.find('.bt-status').text(res.status || 'edited');
+					notify(btAdmin.i18n.saved);
+				},
+				error: function (xhr) {
+					var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : btAdmin.i18n.error;
+					notify(msg, true);
+				}
+			});
+		});
+
+		$('.bt-focus-confirm').on('click', function () {
+			var id = $card.data('id');
+			var $btn = $(this);
+			$btn.prop('disabled', true);
+			$.ajax({
+				url: btAdmin.restUrl + 'translations/' + id,
+				method: 'POST',
+				headers: headers(),
+				data: payload('confirmed'),
+				success: function (res) {
+					notify(btAdmin.i18n.confirmed);
+					goNext(res.next_id || null);
+				},
+				error: function (xhr) {
+					var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : btAdmin.i18n.error;
+					notify(msg, true);
+					$btn.prop('disabled', false);
+				}
+			});
+		});
+
+		$('.bt-focus-retranslate').on('click', function () {
+			var id = $card.data('id');
+			var $btn = $(this);
+			$btn.prop('disabled', true);
+			$.ajax({
+				url: btAdmin.restUrl + 'translations/' + id + '/retranslate',
+				method: 'POST',
+				headers: headers(),
+				success: function (res) {
+					if (res.translated_text) {
+						$('#bt-focus-translated').val(res.translated_text);
+					}
+					$card.find('.bt-status').text(res.status || 'auto');
+					notify(btAdmin.i18n.retranslated);
+				},
+				error: function (xhr) {
+					var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : btAdmin.i18n.error;
+					notify(msg, true);
+				},
+				complete: function () {
+					$btn.prop('disabled', false);
+				}
+			});
+		});
+
+		$(document).on('keydown', function (e) {
+			if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+				e.preventDefault();
+				$('.bt-focus-confirm').trigger('click');
+			}
+		});
+	})();
 })(jQuery);

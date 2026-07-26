@@ -58,6 +58,55 @@
 	line-height: 1.4;
 }
 
+.bt-focus-card {
+	max-width: 960px;
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	padding: 20px 22px;
+	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+
+.bt-focus-card__meta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px 16px;
+	align-items: center;
+	margin-bottom: 14px;
+}
+
+.bt-focus-card__label {
+	display: block;
+	font-weight: 600;
+	margin: 12px 0 6px;
+}
+
+.bt-focus-card textarea {
+	width: 100%;
+	font-family: Consolas, Monaco, monospace;
+	font-size: 13px;
+	line-height: 1.45;
+}
+
+.bt-focus-card__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+	margin-top: 16px;
+}
+
+.bt-focus-card__actions kbd {
+	background: #f0f0f1;
+	border: 1px solid #c3c4c7;
+	border-radius: 3px;
+	padding: 1px 5px;
+	font-size: 11px;
+}
+
+.bt-focus__count {
+	margin-left: 10px;
+}
+
 @media (max-width: 960px) {
 	.bt-admin__grid {
 		grid-template-columns: 1fr;

@@ -171,8 +171,22 @@ final class ReviewController {
 				'status'         => $status,
 				'source_changed' => (bool) $result['source_changed'],
 				'propagated'     => $propagated,
+				'next_id'        => $this->next_pending_id( $id, $request ),
 			)
 		);
+	}
+
+	/**
+	 * Resolve next pending ID for focus review.
+	 *
+	 * @param int             $id      Current ID.
+	 * @param WP_REST_Request $request Request.
+	 */
+	private function next_pending_id( int $id, WP_REST_Request $request ): ?int {
+		$lang = sanitize_key( (string) $request->get_param( 'lang' ) );
+		$repo = new TranslationRepository();
+		$next = $repo->find_next_pending( $id, $lang );
+		return $next ? (int) $next->id : null;
 	}
 
 	/**

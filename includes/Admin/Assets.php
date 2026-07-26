@@ -53,14 +53,16 @@ final class Assets {
 				'restUrl' => esc_url_raw( rest_url( 'budget-translator/v1/' ) ),
 				'nonce'   => wp_create_nonce( 'wp_rest' ),
 				'i18n'    => array(
-					'saved'     => __( 'Saved.', 'budget-translator' ),
-					'confirmed' => __( 'Confirmed.', 'budget-translator' ),
-					'error'     => __( 'Something went wrong.', 'budget-translator' ),
-					'running'   => __( 'Translation job running…', 'budget-translator' ),
-					'done'      => __( 'Translation job finished.', 'budget-translator' ),
-					'purged'    => __( 'Invalid API messages removed.', 'budget-translator' ),
+					'saved'        => __( 'Saved.', 'budget-translator' ),
+					'confirmed'    => __( 'Confirmed.', 'budget-translator' ),
+					'error'        => __( 'Something went wrong.', 'budget-translator' ),
+					'running'      => __( 'Translation job running…', 'budget-translator' ),
+					'done'         => __( 'Translation job finished.', 'budget-translator' ),
+					'purged'       => __( 'Invalid API messages removed.', 'budget-translator' ),
 					'retranslated' => __( 'Retranslated.', 'budget-translator' ),
+					'allDone'      => __( 'Nothing left to review.', 'budget-translator' ),
 				),
+				'focusUrl' => esc_url_raw( admin_url( 'admin.php?page=budget-translator-focus' ) ),
 			)
 		);
 	}

@@ -442,6 +442,98 @@ final class TranslationRepository {
 	}
 
 	/**
+	 * Find a pending item for single review, optionally after a given ID.
+	 *
+	 * @param int    $after_id Prefer next ID after this.
+	 * @param string $lang     Optional target language filter.
+	 */
+	public function find_next_pending( int $after_id = 0, string $lang = '' ): ?object {
+		global $wpdb;
+
+		$table  = $this->table();
+		$where  = array( "status IN ('auto','edited')" );
+		$params = array();
+
+		if ( $lang ) {
+			$where[]  = 'target_lang = %s';
+			$params[] = $lang;
+		}
+
+		$where_sql = implode( ' AND ', $where );
+
+		if ( $after_id > 0 ) {
+			$params_next = array_merge( $params, array( $after_id ) );
+			$sql_next    = "SELECT * FROM {$table} WHERE {$where_sql} AND id > %d ORDER BY id ASC LIMIT 1";
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+			$row = $wpdb->get_row( $wpdb->prepare( $sql_next, ...$params_next ) );
+			if ( $row ) {
+				return $row;
+			}
+		}
+
+		$sql = "SELECT * FROM {$table} WHERE {$where_sql} ORDER BY id ASC LIMIT 1";
+		if ( $params ) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+			$row = $wpdb->get_row( $wpdb->prepare( $sql, ...$params ) );
+		} else {
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$row = $wpdb->get_row( $sql );
+		}
+
+		return $row ?: null;
+	}
+
+	/**
+	 * Find previous pending item before ID.
+	 *
+	 * @param int    $before_id Current ID.
+	 * @param string $lang      Optional language.
+	 */
+	public function find_prev_pending( int $before_id, string $lang = '' ): ?object {
+		global $wpdb;
+
+		$table  = $this->table();
+		$where  = array( "status IN ('auto','edited')" );
+		$params = array();
+
+		if ( $lang ) {
+			$where[]  = 'target_lang = %s';
+			$params[] = $lang;
+		}
+		$where[]  = 'id < %d';
+		$params[] = $before_id;
+
+		$where_sql = implode( ' AND ', $where );
+		$sql       = "SELECT * FROM {$table} WHERE {$where_sql} ORDER BY id DESC LIMIT 1";
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		$row = $wpdb->get_row( $wpdb->prepare( $sql, ...$params ) );
+
+		return $row ?: null;
+	}
+
+	/**
+	 * Count pending items.
+	 *
+	 * @param string $lang Optional language.
+	 */
+	public function count_pending( string $lang = '' ): int {
+		global $wpdb;
+
+		$table = $this->table();
+		if ( $lang ) {
+			return (int) $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT COUNT(*) FROM {$table} WHERE status IN ('auto','edited') AND target_lang = %s",
+					$lang
+				)
+			);
+		}
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		return (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table} WHERE status IN ('auto','edited')" );
+	}
+
+	/**
 	 * Aggregate stats.
 	 *
 	 * @return array{total:int,auto:int,edited:int,confirmed:int,api_calls:int,cache_hits:int}
