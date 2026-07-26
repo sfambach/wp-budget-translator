@@ -30,10 +30,11 @@ $base_url = admin_url( 'admin.php?page=budget-translator-review' );
 		<label>
 			<span class="screen-reader-text"><?php echo esc_html__( 'Status', 'budget-translator' ); ?></span>
 			<select name="bt_status">
-				<option value=""><?php echo esc_html__( 'All statuses', 'budget-translator' ); ?></option>
+				<option value="pending" <?php selected( $status, 'pending' ); ?>><?php echo esc_html__( 'Pending review', 'budget-translator' ); ?></option>
 				<option value="auto" <?php selected( $status, 'auto' ); ?>><?php echo esc_html__( 'Auto', 'budget-translator' ); ?></option>
 				<option value="edited" <?php selected( $status, 'edited' ); ?>><?php echo esc_html__( 'Edited', 'budget-translator' ); ?></option>
 				<option value="confirmed" <?php selected( $status, 'confirmed' ); ?>><?php echo esc_html__( 'Confirmed', 'budget-translator' ); ?></option>
+				<option value="all" <?php selected( $status, '' ); ?>><?php echo esc_html__( 'All statuses', 'budget-translator' ); ?></option>
 			</select>
 		</label>
 		<label>

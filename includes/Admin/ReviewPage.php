@@ -47,14 +47,20 @@ final class ReviewPage {
 		}
 
 		$repo    = new TranslationRepository();
-		$status  = isset( $_GET['bt_status'] ) ? sanitize_key( (string) wp_unslash( $_GET['bt_status'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		// Default: pending review (hide already confirmed entries).
+		$status  = array_key_exists( 'bt_status', $_GET ) // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			? sanitize_key( (string) wp_unslash( $_GET['bt_status'] ) ) // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			: 'pending';
 		$lang    = isset( $_GET['bt_lang'] ) ? sanitize_key( (string) wp_unslash( $_GET['bt_lang'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$search  = isset( $_GET['s'] ) ? sanitize_text_field( (string) wp_unslash( $_GET['s'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$page    = isset( $_GET['paged'] ) ? max( 1, (int) $_GET['paged'] ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$per     = 20;
 
-		$allowed_status = array( 'auto', 'edited', 'confirmed' );
+		$allowed_status = array( 'pending', 'auto', 'edited', 'confirmed', 'all' );
 		if ( $status && ! in_array( $status, $allowed_status, true ) ) {
+			$status = 'pending';
+		}
+		if ( 'all' === $status ) {
 			$status = '';
 		}
 

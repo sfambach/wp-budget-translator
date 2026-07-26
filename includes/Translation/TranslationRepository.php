@@ -349,7 +349,34 @@ final class TranslationRepository {
 		$sql = 'DELETE FROM ' . $table . ' WHERE status = %s AND (' . implode( ' OR ', $where ) . ')';
 		array_unshift( $params, 'auto' );
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-		return (int) $wpdb->query( $wpdb->prepare( $sql, ...$params ) );
+		$deleted = (int) $wpdb->query( $wpdb->prepare( $sql, ...$params ) );
+
+		return $deleted + $this->delete_trivial_segments();
+	}
+
+	/**
+	 * Remove short technical auto-segments that do not need review (e.g. 3V).
+	 */
+	public function delete_trivial_segments(): int {
+		global $wpdb;
+
+		$table = $this->table();
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$rows = $wpdb->get_results( "SELECT id, source_text, translated_text, status FROM {$table} WHERE status = 'auto'" );
+		$ids  = array();
+
+		foreach ( $rows as $row ) {
+			$source = (string) $row->source_text;
+			if ( preg_match( '/^\d+([.,]\d+)?\s*[A-Za-zΩ°%]{1,4}$/u', $source ) ) {
+				$ids[] = (int) $row->id;
+				continue;
+			}
+			if ( mb_strlen( $source ) <= 5 && preg_match( '/^[A-Z0-9][A-Z0-9\-\+]*$/u', $source ) ) {
+				$ids[] = (int) $row->id;
+			}
+		}
+
+		return $this->delete_ids( $ids );
 	}
 
 	/**
@@ -372,8 +399,12 @@ final class TranslationRepository {
 		$params = array();
 
 		if ( $status ) {
-			$where[]  = 'status = %s';
-			$params[] = $status;
+			if ( 'pending' === $status ) {
+				$where[] = "status IN ('auto','edited')";
+			} else {
+				$where[]  = 'status = %s';
+				$params[] = $status;
+			}
 		}
 		if ( $lang ) {
 			$where[]  = 'target_lang = %s';

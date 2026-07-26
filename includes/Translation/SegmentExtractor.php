@@ -209,6 +209,16 @@ final class SegmentExtractor {
 			return false;
 		}
 
+		// Skip technical tokens like 3V, 5V, 3.3V, 100mA — identical across languages.
+		if ( preg_match( '/^\d+([.,]\d+)?\s*[A-Za-zΩ°%]{1,4}$/u', $text ) ) {
+			return false;
+		}
+
+		// Skip short all-caps codes (USB, ESP, LED, GPIO…).
+		if ( mb_strlen( $text ) <= 5 && preg_match( '/^[A-Z0-9][A-Z0-9\-\+]*$/u', $text ) ) {
+			return false;
+		}
+
 		return (bool) preg_match( '/\p{L}/u', $text );
 	}
 }
