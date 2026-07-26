@@ -186,6 +186,72 @@ final class TranslationRepository {
 	}
 
 	/**
+	 * Find row by ID.
+	 *
+	 * @param int $id Row ID.
+	 */
+	public function find_by_id( int $id ): ?object {
+		global $wpdb;
+
+		$row = $wpdb->get_row(
+			$wpdb->prepare(
+				'SELECT * FROM ' . $this->table() . ' WHERE id = %d LIMIT 1',
+				$id
+			)
+		);
+
+		return $row ?: null;
+	}
+
+	/**
+	 * Delete rows by ID.
+	 *
+	 * @param list<int> $ids IDs.
+	 */
+	public function delete_ids( array $ids ): int {
+		global $wpdb;
+
+		$ids = array_values( array_filter( array_map( 'intval', $ids ) ) );
+		if ( array() === $ids ) {
+			return 0;
+		}
+
+		$placeholders = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
+		$sql          = 'DELETE FROM ' . $this->table() . " WHERE id IN ({$placeholders})";
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		return (int) $wpdb->query( $wpdb->prepare( $sql, ...$ids ) );
+	}
+
+	/**
+	 * Delete cached rows that contain known provider error messages.
+	 */
+	public function delete_invalid_api_payloads(): int {
+		global $wpdb;
+
+		$table = $this->table();
+		$like_parts = array(
+			'%MYMEMORY WARNING%',
+			'%PLEASE SELECT TWO-LETTER ISO%',
+			'%RFC3066%',
+			'%INVALID LANGUAGE PAIR%',
+			'%QUERY LENGTH LIMIT%',
+			'%YOU USED ALL AVAILABLE FREE TRANSLATIONS%',
+		);
+
+		$where = array();
+		$params = array();
+		foreach ( $like_parts as $like ) {
+			$where[]  = 'translated_text LIKE %s';
+			$params[] = $like;
+		}
+
+		$sql = 'DELETE FROM ' . $table . ' WHERE status = %s AND (' . implode( ' OR ', $where ) . ')';
+		array_unshift( $params, 'auto' );
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		return (int) $wpdb->query( $wpdb->prepare( $sql, ...$params ) );
+	}
+
+	/**
 	 * Query rows for review UI.
 	 *
 	 * @param array{status?:string,lang?:string,search?:string,page?:int,per?:int} $args Args.

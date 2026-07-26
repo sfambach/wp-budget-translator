@@ -60,6 +60,55 @@
 		});
 	});
 
+	$(document).on('click', '.bt-retranslate-row', function () {
+		var $row = $(this).closest('tr');
+		var id = $row.data('id');
+		var $btn = $(this);
+		$btn.prop('disabled', true);
+
+		$.ajax({
+			url: btAdmin.restUrl + 'translations/' + id + '/retranslate',
+			method: 'POST',
+			headers: headers(),
+			success: function (res) {
+				if (res.translated_text) {
+					$row.find('.bt-translated').val(res.translated_text);
+				}
+				$row.find('.bt-status').text(res.status || 'auto');
+				notify(btAdmin.i18n.retranslated);
+			},
+			error: function (xhr) {
+				var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : btAdmin.i18n.error;
+				notify(msg, true);
+			},
+			complete: function () {
+				$btn.prop('disabled', false);
+			}
+		});
+	});
+
+	$('#bt-purge-invalid').on('click', function () {
+		var $btn = $(this);
+		$btn.prop('disabled', true);
+		$.ajax({
+			url: btAdmin.restUrl + 'translations/purge-invalid',
+			method: 'POST',
+			headers: headers(),
+			success: function (res) {
+				notify((btAdmin.i18n.purged || 'Purged') + ' (' + (res.count || 0) + ')');
+				window.setTimeout(function () {
+					window.location.reload();
+				}, 600);
+			},
+			error: function () {
+				notify(btAdmin.i18n.error, true);
+			},
+			complete: function () {
+				$btn.prop('disabled', false);
+			}
+		});
+	});
+
 	$('#bt-check-all').on('change', function () {
 		$('.bt-row-check').prop('checked', $(this).is(':checked'));
 	});

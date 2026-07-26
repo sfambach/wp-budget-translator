@@ -58,6 +58,8 @@ final class Assets {
 					'error'     => __( 'Something went wrong.', 'budget-translator' ),
 					'running'   => __( 'Translation job running…', 'budget-translator' ),
 					'done'      => __( 'Translation job finished.', 'budget-translator' ),
+					'purged'    => __( 'Invalid API messages removed.', 'budget-translator' ),
+					'retranslated' => __( 'Retranslated.', 'budget-translator' ),
 				),
 			)
 		);

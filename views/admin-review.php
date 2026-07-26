@@ -51,6 +51,7 @@ $base_url = admin_url( 'admin.php?page=budget-translator-review' );
 
 	<p>
 		<button type="button" class="button" id="bt-confirm-selected"><?php echo esc_html__( 'Confirm selected', 'budget-translator' ); ?></button>
+		<button type="button" class="button" id="bt-purge-invalid"><?php echo esc_html__( 'Remove invalid API messages', 'budget-translator' ); ?></button>
 		<span class="description"><?php printf( esc_html__( '%d segments', 'budget-translator' ), (int) $result['total'] ); ?></span>
 	</p>
 
@@ -81,6 +82,7 @@ $base_url = admin_url( 'admin.php?page=budget-translator-review' );
 						<td>
 							<button type="button" class="button button-small bt-save-row"><?php echo esc_html__( 'Save', 'budget-translator' ); ?></button>
 							<button type="button" class="button button-small bt-confirm-row"><?php echo esc_html__( 'Confirm', 'budget-translator' ); ?></button>
+							<button type="button" class="button button-small bt-retranslate-row"><?php echo esc_html__( 'Retranslate', 'budget-translator' ); ?></button>
 						</td>
 					</tr>
 				<?php endforeach; ?>

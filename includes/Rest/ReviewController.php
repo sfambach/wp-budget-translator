@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace BudgetTranslator\Rest;
 
+use BudgetTranslator\Translation\ProviderFactory;
 use BudgetTranslator\Translation\TranslationRepository;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -45,6 +46,37 @@ final class ReviewController {
 						),
 					),
 				),
+				array(
+					'methods'             => 'DELETE',
+					'callback'            => array( $this, 'delete' ),
+					'permission_callback' => array( $this, 'can_manage' ),
+					'args'                => array(
+						'id' => array(
+							'type'              => 'integer',
+							'required'          => true,
+							'sanitize_callback' => 'absint',
+						),
+					),
+				),
+			)
+		);
+
+		register_rest_route(
+			'budget-translator/v1',
+			'/translations/(?P<id>\d+)/retranslate',
+			array(
+				array(
+					'methods'             => 'POST',
+					'callback'            => array( $this, 'retranslate' ),
+					'permission_callback' => array( $this, 'can_manage' ),
+					'args'                => array(
+						'id' => array(
+							'type'              => 'integer',
+							'required'          => true,
+							'sanitize_callback' => 'absint',
+						),
+					),
+				),
 			)
 		);
 
@@ -55,6 +87,18 @@ final class ReviewController {
 				array(
 					'methods'             => 'POST',
 					'callback'            => array( $this, 'confirm' ),
+					'permission_callback' => array( $this, 'can_manage' ),
+				),
+			)
+		);
+
+		register_rest_route(
+			'budget-translator/v1',
+			'/translations/purge-invalid',
+			array(
+				array(
+					'methods'             => 'POST',
+					'callback'            => array( $this, 'purge_invalid' ),
 					'permission_callback' => array( $this, 'can_manage' ),
 				),
 			)
@@ -98,6 +142,92 @@ final class ReviewController {
 	}
 
 	/**
+	 * Delete a cached translation.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 */
+	public function delete( WP_REST_Request $request ): WP_REST_Response {
+		$id    = (int) $request['id'];
+		$repo  = new TranslationRepository();
+		$count = $repo->delete_ids( array( $id ) );
+
+		return new WP_REST_Response(
+			array(
+				'success' => $count > 0,
+				'count'   => $count,
+			)
+		);
+	}
+
+	/**
+	 * Force retranslate a row via the active provider.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 */
+	public function retranslate( WP_REST_Request $request ): WP_REST_Response {
+		$id   = (int) $request['id'];
+		$repo = new TranslationRepository();
+		$row  = $repo->find_by_id( $id );
+
+		if ( ! $row ) {
+			return new WP_REST_Response( array( 'success' => false, 'message' => 'Not found' ), 404 );
+		}
+
+		if ( 'confirmed' === $row->status ) {
+			return new WP_REST_Response(
+				array(
+					'success' => false,
+					'message' => 'Confirmed translations are protected. Unconfirm first.',
+				),
+				400
+			);
+		}
+
+		try {
+			$provider   = ProviderFactory::make();
+			$translated = $provider->translate(
+				(string) $row->source_text,
+				(string) $row->source_lang,
+				(string) $row->target_lang
+			);
+			$repo->upsert(
+				(string) $row->source_lang,
+				(string) $row->target_lang,
+				(string) $row->source_text,
+				$translated,
+				$provider->get_slug(),
+				'auto',
+				true
+			);
+			$repo->increment_api_calls();
+		} catch ( \Throwable $e ) {
+			return new WP_REST_Response(
+				array(
+					'success' => false,
+					'message' => $e->getMessage(),
+				),
+				502
+			);
+		}
+
+		$fresh = $repo->find_by_id( $id );
+		if ( ! $fresh ) {
+			$fresh = $repo->find_by_hash(
+				$repo->hash( (string) $row->source_lang, (string) $row->target_lang, (string) $row->source_text )
+			);
+		}
+
+		return new WP_REST_Response(
+			array(
+				'success'         => true,
+				'id'              => $fresh ? (int) $fresh->id : $id,
+				'translated_text' => $fresh ? (string) $fresh->translated_text : $translated,
+				'status'          => $fresh ? (string) $fresh->status : 'auto',
+			)
+		);
+	}
+
+	/**
 	 * Bulk confirm.
 	 *
 	 * @param WP_REST_Request $request Request.
@@ -110,6 +240,21 @@ final class ReviewController {
 
 		$repo  = new TranslationRepository();
 		$count = $repo->confirm_ids( array_map( 'intval', $ids ) );
+
+		return new WP_REST_Response(
+			array(
+				'success' => true,
+				'count'   => $count,
+			)
+		);
+	}
+
+	/**
+	 * Remove auto-translations that contain provider error messages.
+	 */
+	public function purge_invalid(): WP_REST_Response {
+		$repo  = new TranslationRepository();
+		$count = $repo->delete_invalid_api_payloads();
 
 		return new WP_REST_Response(
 			array(
