@@ -231,7 +231,11 @@
 			}
 			notify(btAdmin.i18n.allDone);
 			window.setTimeout(function () {
-				window.location.href = focusUrl('');
+				var url = btAdmin.focusUrl;
+				if (lang) {
+					url += (url.indexOf('?') >= 0 ? '&' : '?') + 'bt_lang=' + encodeURIComponent(lang);
+				}
+				window.location.href = url;
 			}, 500);
 		}
 
