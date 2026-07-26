@@ -367,6 +367,10 @@ final class TranslationRepository {
 
 		foreach ( $rows as $row ) {
 			$source = (string) $row->source_text;
+			if ( LinkGuard::is_protected_segment( $source ) ) {
+				$ids[] = (int) $row->id;
+				continue;
+			}
 			if ( preg_match( '/^\d+([.,]\d+)?\s*[A-Za-zΩ°%]{1,4}$/u', $source ) ) {
 				$ids[] = (int) $row->id;
 				continue;

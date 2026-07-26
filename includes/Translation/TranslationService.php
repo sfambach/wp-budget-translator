@@ -106,6 +106,10 @@ final class TranslationService {
 
 		foreach ( $segments as $segment ) {
 			$hash = $hashes[ $segment ];
+			if ( LinkGuard::is_protected_segment( $segment ) ) {
+				$map[ $segment ] = $segment;
+				continue;
+			}
 			if ( isset( $cached[ $hash ] ) ) {
 				$map[ $segment ] = (string) $cached[ $hash ]->translated_text;
 				$this->repository->increment_cache_hits();
@@ -122,7 +126,9 @@ final class TranslationService {
 
 		foreach ( $misses as $segment ) {
 			try {
-				$translated = $provider->translate( $segment, $source_lang, $target_lang );
+				[ $masked, $tokens ] = LinkGuard::mask( $segment );
+				$translated            = $provider->translate( $masked, $source_lang, $target_lang );
+				$translated            = LinkGuard::unmask( $translated, $tokens );
 				$this->repository->upsert( $source_lang, $target_lang, $segment, $translated, $provider->get_slug(), 'auto' );
 				$this->repository->increment_api_calls();
 				$map[ $segment ] = $translated;

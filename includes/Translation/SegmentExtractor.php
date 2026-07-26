@@ -205,7 +205,7 @@ final class SegmentExtractor {
 		if ( preg_match( '/^[\d\s\.\,\:\;\-\+\(\)\/\%€$]+$/u', $text ) ) {
 			return false;
 		}
-		if ( preg_match( '#^https?://#i', $text ) ) {
+		if ( LinkGuard::is_protected_segment( $text ) ) {
 			return false;
 		}
 
