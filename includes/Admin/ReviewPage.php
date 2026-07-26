@@ -104,10 +104,9 @@ final class ReviewPage {
 		$item = null;
 		if ( $id > 0 ) {
 			$item = $repo->find_by_id( $id );
-			// If this ID is already confirmed, jump to next pending.
-			if ( $item && 'confirmed' === $item->status ) {
-				$item = $repo->find_next_pending( $id, $lang );
-			} elseif ( $item && $lang && $item->target_lang !== $lang ) {
+			// Keep explicitly requested IDs visible (needed for Previous).
+			// Only fall back when the ID does not exist or language filter mismatches.
+			if ( $item && $lang && $item->target_lang !== $lang && 'confirmed' !== $item->status ) {
 				$item = $repo->find_next_pending( 0, $lang );
 			}
 		}

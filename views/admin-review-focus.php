@@ -75,8 +75,14 @@ $focus_url = admin_url( 'admin.php?page=budget-translator-focus' );
 			<textarea id="bt-focus-translated" class="bt-translated large-text" rows="8"><?php echo esc_textarea( (string) $item->translated_text ); ?></textarea>
 
 			<div class="bt-focus-card__actions">
+				<?php
+				$nav_args = array();
+				if ( $lang ) {
+					$nav_args['bt_lang'] = $lang;
+				}
+				?>
 				<?php if ( $prev ) : ?>
-					<a class="button" href="<?php echo esc_url( add_query_arg( array( 'bt_id' => (int) $prev->id, 'bt_lang' => $lang ), $focus_url ) ); ?>"><?php echo esc_html__( 'Previous', 'budget-translator' ); ?></a>
+					<a class="button bt-focus-prev" href="<?php echo esc_url( add_query_arg( array_merge( $nav_args, array( 'bt_id' => (int) $prev->id ) ), $focus_url ) ); ?>"><?php echo esc_html__( 'Previous', 'budget-translator' ); ?></a>
 				<?php else : ?>
 					<button type="button" class="button" disabled><?php echo esc_html__( 'Previous', 'budget-translator' ); ?></button>
 				<?php endif; ?>
@@ -86,11 +92,15 @@ $focus_url = admin_url( 'admin.php?page=budget-translator-focus' );
 				<button type="button" class="button button-primary bt-focus-confirm"><?php echo esc_html__( 'Confirm & next', 'budget-translator' ); ?> <kbd>Ctrl</kbd>+<kbd>Enter</kbd></button>
 
 				<?php if ( $next ) : ?>
-					<a class="button" href="<?php echo esc_url( add_query_arg( array( 'bt_id' => (int) $next->id, 'bt_lang' => $lang ), $focus_url ) ); ?>"><?php echo esc_html__( 'Skip', 'budget-translator' ); ?></a>
+					<a class="button bt-focus-skip" href="<?php echo esc_url( add_query_arg( array_merge( $nav_args, array( 'bt_id' => (int) $next->id ) ), $focus_url ) ); ?>"><?php echo esc_html__( 'Skip', 'budget-translator' ); ?></a>
 				<?php else : ?>
 					<button type="button" class="button" disabled><?php echo esc_html__( 'Skip', 'budget-translator' ); ?></button>
 				<?php endif; ?>
 			</div>
+
+			<?php if ( 'confirmed' === $item->status ) : ?>
+				<p class="description"><?php echo esc_html__( 'This entry is already confirmed. Use Previous/Skip to move, or edit and save again.', 'budget-translator' ); ?></p>
+			<?php endif; ?>
 		</div>
 	<?php endif; ?>
 </div>

@@ -442,12 +442,13 @@ final class TranslationRepository {
 	}
 
 	/**
-	 * Find a pending item for single review, optionally after a given ID.
+	 * Find adjacent pending item (with wrap, never returns the same ID).
 	 *
-	 * @param int    $after_id Prefer next ID after this.
-	 * @param string $lang     Optional target language filter.
+	 * @param int    $current_id Current row ID.
+	 * @param string $direction  'prev' or 'next'.
+	 * @param string $lang       Optional target language filter.
 	 */
-	public function find_next_pending( int $after_id = 0, string $lang = '' ): ?object {
+	public function find_adjacent_pending( int $current_id, string $direction = 'next', string $lang = '' ): ?object {
 		global $wpdb;
 
 		$table  = $this->table();
@@ -460,18 +461,76 @@ final class TranslationRepository {
 		}
 
 		$where_sql = implode( ' AND ', $where );
+		$sql       = "SELECT id FROM {$table} WHERE {$where_sql} ORDER BY id ASC";
 
-		if ( $after_id > 0 ) {
-			$params_next = array_merge( $params, array( $after_id ) );
-			$sql_next    = "SELECT * FROM {$table} WHERE {$where_sql} AND id > %d ORDER BY id ASC LIMIT 1";
+		if ( $params ) {
 			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-			$row = $wpdb->get_row( $wpdb->prepare( $sql_next, ...$params_next ) );
-			if ( $row ) {
-				return $row;
+			$ids = $wpdb->get_col( $wpdb->prepare( $sql, ...$params ) );
+		} else {
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$ids = $wpdb->get_col( $sql );
+		}
+
+		$ids = array_map( 'intval', $ids ?: array() );
+		if ( array() === $ids ) {
+			return null;
+		}
+
+		// Only one pending item overall.
+		if ( 1 === count( $ids ) ) {
+			return (int) $ids[0] === $current_id ? null : $this->find_by_id( (int) $ids[0] );
+		}
+
+		$index = array_search( $current_id, $ids, true );
+		$count = count( $ids );
+
+		if ( false === $index ) {
+			// Current not in pending list (e.g. just confirmed): next = first, prev = last.
+			$index = 'next' === $direction ? -1 : 0;
+		}
+
+		if ( 'prev' === $direction ) {
+			$index = ( $index - 1 + $count ) % $count;
+		} else {
+			$index = ( $index + 1 ) % $count;
+		}
+
+		$target_id = (int) $ids[ $index ];
+		if ( $target_id === $current_id ) {
+			return null;
+		}
+
+		return $this->find_by_id( $target_id );
+	}
+
+	/**
+	 * Find a pending item for single review, optionally after a given ID.
+	 *
+	 * @param int    $after_id Prefer next ID after this.
+	 * @param string $lang     Optional target language filter.
+	 */
+	public function find_next_pending( int $after_id = 0, string $lang = '' ): ?object {
+		if ( $after_id > 0 ) {
+			$adjacent = $this->find_adjacent_pending( $after_id, 'next', $lang );
+			if ( $adjacent ) {
+				return $adjacent;
 			}
 		}
 
-		$sql = "SELECT * FROM {$table} WHERE {$where_sql} ORDER BY id ASC LIMIT 1";
+		global $wpdb;
+
+		$table  = $this->table();
+		$where  = array( "status IN ('auto','edited')" );
+		$params = array();
+
+		if ( $lang ) {
+			$where[]  = 'target_lang = %s';
+			$params[] = $lang;
+		}
+
+		$where_sql = implode( ' AND ', $where );
+		$sql       = "SELECT * FROM {$table} WHERE {$where_sql} ORDER BY id ASC LIMIT 1";
+
 		if ( $params ) {
 			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 			$row = $wpdb->get_row( $wpdb->prepare( $sql, ...$params ) );
@@ -484,31 +543,13 @@ final class TranslationRepository {
 	}
 
 	/**
-	 * Find previous pending item before ID.
+	 * Find previous pending item before ID (with wrap).
 	 *
 	 * @param int    $before_id Current ID.
 	 * @param string $lang      Optional language.
 	 */
 	public function find_prev_pending( int $before_id, string $lang = '' ): ?object {
-		global $wpdb;
-
-		$table  = $this->table();
-		$where  = array( "status IN ('auto','edited')" );
-		$params = array();
-
-		if ( $lang ) {
-			$where[]  = 'target_lang = %s';
-			$params[] = $lang;
-		}
-		$where[]  = 'id < %d';
-		$params[] = $before_id;
-
-		$where_sql = implode( ' AND ', $where );
-		$sql       = "SELECT * FROM {$table} WHERE {$where_sql} ORDER BY id DESC LIMIT 1";
-		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-		$row = $wpdb->get_row( $wpdb->prepare( $sql, ...$params ) );
-
-		return $row ?: null;
+		return $this->find_adjacent_pending( $before_id, 'prev', $lang );
 	}
 
 	/**
