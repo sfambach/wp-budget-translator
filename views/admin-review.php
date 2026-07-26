@@ -55,6 +55,10 @@ $base_url = admin_url( 'admin.php?page=budget-translator-review' );
 		<span class="description"><?php printf( esc_html__( '%d segments', 'budget-translator' ), (int) $result['total'] ); ?></span>
 	</p>
 
+	<p class="description">
+		<?php echo esc_html__( 'You can edit the German source and the translation together. Saving a changed source also updates matching text in posts, pages and menus.', 'budget-translator' ); ?>
+	</p>
+
 	<table class="widefat striped bt-review-table">
 		<thead>
 			<tr>
@@ -73,7 +77,9 @@ $base_url = admin_url( 'admin.php?page=budget-translator-review' );
 				<?php foreach ( $result['items'] as $row ) : ?>
 					<tr data-id="<?php echo esc_attr( (string) $row->id ); ?>">
 						<th class="check-column"><input type="checkbox" class="bt-row-check" value="<?php echo esc_attr( (string) $row->id ); ?>" /></th>
-						<td class="bt-source"><?php echo esc_html( wp_trim_words( (string) $row->source_text, 40, '…' ) ); ?></td>
+						<td>
+							<textarea class="bt-source-text large-text" rows="3"><?php echo esc_textarea( (string) $row->source_text ); ?></textarea>
+						</td>
 						<td>
 							<textarea class="bt-translated large-text" rows="3"><?php echo esc_textarea( (string) $row->translated_text ); ?></textarea>
 						</td>

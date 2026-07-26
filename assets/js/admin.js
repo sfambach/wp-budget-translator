@@ -23,19 +23,25 @@
 	$(document).on('click', '.bt-save-row', function () {
 		var $row = $(this).closest('tr');
 		var id = $row.data('id');
+		var source = $row.find('.bt-source-text').val();
 		var text = $row.find('.bt-translated').val();
 
 		$.ajax({
 			url: btAdmin.restUrl + 'translations/' + id,
 			method: 'POST',
 			headers: headers(),
-			data: JSON.stringify({ translated_text: text, status: 'edited' }),
+			data: JSON.stringify({ source_text: source, translated_text: text, status: 'edited' }),
 			success: function (res) {
 				$row.find('.bt-status').text(res.status || 'edited');
-				notify(btAdmin.i18n.saved);
+				var msg = btAdmin.i18n.saved;
+				if (res.source_changed && res.propagated) {
+					msg += ' (posts: ' + (res.propagated.posts || 0) + ', menus: ' + (res.propagated.menus || 0) + ')';
+				}
+				notify(msg);
 			},
-			error: function () {
-				notify(btAdmin.i18n.error, true);
+			error: function (xhr) {
+				var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : btAdmin.i18n.error;
+				notify(msg, true);
 			}
 		});
 	});
@@ -43,19 +49,25 @@
 	$(document).on('click', '.bt-confirm-row', function () {
 		var $row = $(this).closest('tr');
 		var id = $row.data('id');
+		var source = $row.find('.bt-source-text').val();
 		var text = $row.find('.bt-translated').val();
 
 		$.ajax({
 			url: btAdmin.restUrl + 'translations/' + id,
 			method: 'POST',
 			headers: headers(),
-			data: JSON.stringify({ translated_text: text, status: 'confirmed' }),
-			success: function () {
+			data: JSON.stringify({ source_text: source, translated_text: text, status: 'confirmed' }),
+			success: function (res) {
 				$row.find('.bt-status').text('confirmed');
-				notify(btAdmin.i18n.confirmed);
+				var msg = btAdmin.i18n.confirmed;
+				if (res.source_changed && res.propagated) {
+					msg += ' (posts: ' + (res.propagated.posts || 0) + ', menus: ' + (res.propagated.menus || 0) + ')';
+				}
+				notify(msg);
 			},
-			error: function () {
-				notify(btAdmin.i18n.error, true);
+			error: function (xhr) {
+				var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : btAdmin.i18n.error;
+				notify(msg, true);
 			}
 		});
 	});

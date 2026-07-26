@@ -47,12 +47,15 @@
 
 .bt-review-table textarea {
 	width: 100%;
-	min-width: 220px;
+	min-width: 180px;
+	min-height: 4.5em;
 }
 
-.bt-review-table .bt-source {
-	max-width: 280px;
-	vertical-align: top;
+.bt-review-table .bt-source-text,
+.bt-review-table .bt-translated {
+	font-family: Consolas, Monaco, monospace;
+	font-size: 12px;
+	line-height: 1.4;
 }
 
 @media (max-width: 960px) {

@@ -150,20 +150,121 @@ final class TranslationRepository {
 	 * @param string $status  Status.
 	 */
 	public function update_translation( int $id, string $text, string $status = 'edited' ): bool {
+		$result = $this->update_entry( $id, null, $text, $status );
+		return (bool) ( $result['success'] ?? false );
+	}
+
+	/**
+	 * Update source and/or translation for a row (recomputes hash when source changes).
+	 *
+	 * @param int         $id               Row ID.
+	 * @param string|null $source_text      New source or null to keep.
+	 * @param string|null $translated_text  New translation or null to keep.
+	 * @param string      $status           Status.
+	 * @return array{success:bool,source_changed:bool,old_source:string,new_source:string,message?:string}
+	 */
+	public function update_entry( int $id, ?string $source_text, ?string $translated_text, string $status = 'edited' ): array {
 		global $wpdb;
+
+		$row = $this->find_by_id( $id );
+		if ( ! $row ) {
+			return array(
+				'success'        => false,
+				'source_changed' => false,
+				'old_source'     => '',
+				'new_source'     => '',
+				'message'        => 'Not found',
+			);
+		}
+
+		$old_source = (string) $row->source_text;
+		$new_source = null === $source_text ? $old_source : $source_text;
+		$new_trans  = null === $translated_text ? (string) $row->translated_text : $translated_text;
+		$source_changed = $new_source !== $old_source;
+		$new_hash       = $this->hash( (string) $row->source_lang, (string) $row->target_lang, $new_source );
+
+		if ( $source_changed ) {
+			$conflict = $this->find_by_hash( $new_hash );
+			if ( $conflict && (int) $conflict->id !== $id ) {
+				return array(
+					'success'        => false,
+					'source_changed' => true,
+					'old_source'     => $old_source,
+					'new_source'     => $new_source,
+					'message'        => 'Another translation already exists for this corrected source text.',
+				);
+			}
+		}
+
+		$data = array(
+			'source_text'     => $new_source,
+			'translated_text' => $new_trans,
+			'status'          => $status,
+			'hash'            => $new_hash,
+		);
 
 		$result = $wpdb->update(
 			$this->table(),
-			array(
-				'translated_text' => $text,
-				'status'          => $status,
-			),
+			$data,
 			array( 'id' => $id ),
-			array( '%s', '%s' ),
+			array( '%s', '%s', '%s', '%s' ),
 			array( '%d' )
 		);
 
-		return false !== $result;
+		return array(
+			'success'        => false !== $result,
+			'source_changed' => $source_changed,
+			'old_source'     => $old_source,
+			'new_source'     => $new_source,
+		);
+	}
+
+	/**
+	 * Update source_text/hash on sibling rows (other target languages) with the same old source.
+	 *
+	 * @param string $old_source Old source.
+	 * @param string $new_source New source.
+	 * @param int    $except_id  Row already updated.
+	 */
+	public function sync_source_text( string $old_source, string $new_source, int $except_id = 0 ): int {
+		global $wpdb;
+
+		if ( $old_source === $new_source ) {
+			return 0;
+		}
+
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				'SELECT id, source_lang, target_lang FROM ' . $this->table() . ' WHERE source_text = %s AND id <> %d',
+				$old_source,
+				$except_id
+			)
+		);
+
+		$updated = 0;
+		foreach ( $rows as $row ) {
+			$hash = $this->hash( (string) $row->source_lang, (string) $row->target_lang, $new_source );
+			$conflict = $this->find_by_hash( $hash );
+			if ( $conflict && (int) $conflict->id !== (int) $row->id ) {
+				continue;
+			}
+
+			$ok = $wpdb->update(
+				$this->table(),
+				array(
+					'source_text' => $new_source,
+					'hash'        => $hash,
+				),
+				array( 'id' => (int) $row->id ),
+				array( '%s', '%s' ),
+				array( '%d' )
+			);
+			if ( false !== $ok ) {
+				++$updated;
+			}
+		}
+
+		return $updated;
 	}
 
 	/**

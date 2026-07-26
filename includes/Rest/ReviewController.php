@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace BudgetTranslator\Rest;
 
 use BudgetTranslator\Translation\ProviderFactory;
+use BudgetTranslator\Translation\SourcePropagator;
 use BudgetTranslator\Translation\TranslationRepository;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -113,30 +114,63 @@ final class ReviewController {
 	}
 
 	/**
-	 * Update a translation.
+	 * Update a translation (and optional source correction).
 	 *
 	 * @param WP_REST_Request $request Request.
 	 */
 	public function update( WP_REST_Request $request ): WP_REST_Response {
 		$id     = (int) $request['id'];
-		$text   = (string) $request->get_param( 'translated_text' );
 		$status = sanitize_key( (string) $request->get_param( 'status' ) );
 		if ( ! in_array( $status, array( 'edited', 'confirmed', 'auto' ), true ) ) {
 			$status = 'edited';
 		}
 
-		$repo = new TranslationRepository();
-		$ok   = $repo->update_translation( $id, $text, $status );
+		$translated = $request->get_param( 'translated_text' );
+		$source     = $request->get_param( 'source_text' );
 
-		if ( ! $ok ) {
-			return new WP_REST_Response( array( 'success' => false ), 400 );
+		$repo   = new TranslationRepository();
+		$result = $repo->update_entry(
+			$id,
+			is_string( $source ) ? $source : null,
+			is_string( $translated ) ? $translated : null,
+			$status
+		);
+
+		if ( empty( $result['success'] ) ) {
+			return new WP_REST_Response(
+				array(
+					'success' => false,
+					'message' => $result['message'] ?? 'Update failed',
+				),
+				400
+			);
+		}
+
+		$propagated = array(
+			'posts' => 0,
+			'menus' => 0,
+		);
+
+		if ( ! empty( $result['source_changed'] ) ) {
+			$propagator = new SourcePropagator();
+			$propagated = $propagator->replace(
+				(string) $result['old_source'],
+				(string) $result['new_source']
+			);
+			$repo->sync_source_text(
+				(string) $result['old_source'],
+				(string) $result['new_source'],
+				$id
+			);
 		}
 
 		return new WP_REST_Response(
 			array(
-				'success' => true,
-				'id'      => $id,
-				'status'  => $status,
+				'success'        => true,
+				'id'             => $id,
+				'status'         => $status,
+				'source_changed' => (bool) $result['source_changed'],
+				'propagated'     => $propagated,
 			)
 		);
 	}
