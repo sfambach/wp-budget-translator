@@ -57,40 +57,41 @@ final class ContentFilters {
 	/**
 	 * Translate post title.
 	 *
-	 * @param string $title Post title.
-	 * @param int    $post_id Post ID.
+	 * @param mixed $title   Post title.
+	 * @param mixed $post_id Post ID.
 	 */
-	public function filter_title( string $title, $post_id = 0 ): string {
+	public function filter_title( mixed $title, mixed $post_id = 0 ): string {
+		unset( $post_id );
 		return $this->maybe_translate( $title );
 	}
 
 	/**
 	 * Translate post content.
 	 *
-	 * @param string $content Content.
+	 * @param mixed $content Content.
 	 */
-	public function filter_content( string $content ): string {
+	public function filter_content( mixed $content ): string {
 		return $this->maybe_translate( $content );
 	}
 
 	/**
 	 * Translate excerpt.
 	 *
-	 * @param string $excerpt Excerpt.
+	 * @param mixed $excerpt Excerpt (WP may pass null).
 	 */
-	public function filter_excerpt( string $excerpt ): string {
+	public function filter_excerpt( mixed $excerpt ): string {
 		return $this->maybe_translate( $excerpt );
 	}
 
 	/**
 	 * Translate menu item title.
 	 *
-	 * @param string   $title Menu title.
-	 * @param \WP_Post $item  Menu item.
-	 * @param stdClass $args  Args.
-	 * @param int      $depth Depth.
+	 * @param mixed $title Menu title.
+	 * @param mixed $item  Menu item.
+	 * @param mixed $args  Args.
+	 * @param mixed $depth Depth.
 	 */
-	public function filter_menu_title( string $title, $item, $args, int $depth ): string {
+	public function filter_menu_title( mixed $title, mixed $item = null, mixed $args = null, mixed $depth = 0 ): string {
 		unset( $item, $args, $depth );
 		return $this->maybe_translate( $title );
 	}
@@ -98,17 +99,17 @@ final class ContentFilters {
 	/**
 	 * Translate widget titles.
 	 *
-	 * @param string $title Title.
+	 * @param mixed $title Title.
 	 */
-	public function filter_widget_title( string $title ): string {
+	public function filter_widget_title( mixed $title ): string {
 		return $this->maybe_translate( $title );
 	}
 
 	/**
 	 * Translate document title parts.
 	 *
-	 * @param array<string, string> $parts Parts.
-	 * @return array<string, string>
+	 * @param array<string, mixed> $parts Parts.
+	 * @return array<string, mixed>
 	 */
 	public function filter_document_title( array $parts ): array {
 		foreach ( $parts as $key => $value ) {
@@ -120,12 +121,19 @@ final class ContentFilters {
 	}
 
 	/**
-	 * Translate when viewing a target language.
+	 * Translate when viewing a target language on the public frontend.
 	 *
-	 * @param string $text Text.
+	 * @param mixed $text Text.
 	 */
-	private function maybe_translate( string $text ): string {
-		if ( is_admin() || ! $this->detector->is_translated() || '' === trim( $text ) ) {
+	private function maybe_translate( mixed $text ): string {
+		$text = is_string( $text ) ? $text : ( null === $text ? '' : (string) $text );
+
+		// Admin, editor REST preloads, and cron must never translate.
+		if ( is_admin() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) || wp_doing_cron() ) {
+			return $text;
+		}
+
+		if ( ! $this->detector->is_translated() || '' === trim( $text ) ) {
 			return $text;
 		}
 
