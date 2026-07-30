@@ -79,7 +79,7 @@ final class MyMemoryProvider implements ProviderInterface {
 		$response = wp_remote_get(
 			$url,
 			array(
-				'timeout' => 25,
+				'timeout' => 8,
 				'headers' => array(
 					'Accept' => 'application/json',
 				),

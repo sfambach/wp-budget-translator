@@ -8,6 +8,51 @@
 		};
 	}
 
+	/**
+	 * Grow a textarea so its full content is visible.
+	 *
+	 * @param {HTMLTextAreaElement|jQuery} el Textarea.
+	 */
+	function autosizeTextarea(el) {
+		var node = el && el.jquery ? el[0] : el;
+		if (!node || node.tagName !== 'TEXTAREA') {
+			return;
+		}
+		node.style.height = 'auto';
+		node.style.height = Math.max(node.scrollHeight, 48) + 'px';
+	}
+
+	/**
+	 * Autosize source + translation in a review row to the same height.
+	 *
+	 * @param {jQuery} $row Table row.
+	 */
+	function autosizeRow($row) {
+		var $areas = $row.find('.bt-source-text, .bt-translated');
+		if (!$areas.length) {
+			return;
+		}
+		$areas.each(function () {
+			this.style.height = 'auto';
+		});
+		var max = 48;
+		$areas.each(function () {
+			max = Math.max(max, this.scrollHeight);
+		});
+		$areas.each(function () {
+			this.style.height = max + 'px';
+		});
+	}
+
+	function autosizeAll() {
+		$('.bt-review-table tbody tr').each(function () {
+			autosizeRow($(this));
+		});
+		$('#bt-focus-source, #bt-focus-translated').each(function () {
+			autosizeTextarea(this);
+		});
+	}
+
 	function notify(msg, isError) {
 		var $n = $('<div class="notice is-dismissible"><p></p></div>');
 		$n.addClass(isError ? 'notice-error' : 'notice-success');
@@ -85,6 +130,7 @@
 			success: function (res) {
 				if (res.translated_text) {
 					$row.find('.bt-translated').val(res.translated_text);
+					autosizeRow($row);
 				}
 				$row.find('.bt-status').text(res.status || 'auto');
 				notify(btAdmin.i18n.retranslated);
@@ -298,6 +344,7 @@
 				success: function (res) {
 					if (res.translated_text) {
 						$('#bt-focus-translated').val(res.translated_text);
+						autosizeTextarea($('#bt-focus-translated'));
 					}
 					$card.find('.bt-status').text(res.status || 'auto');
 					notify(btAdmin.i18n.retranslated);
@@ -319,4 +366,15 @@
 			}
 		});
 	})();
+
+	$(document).on('input', '.bt-review-table .bt-source-text, .bt-review-table .bt-translated', function () {
+		autosizeRow($(this).closest('tr'));
+	});
+
+	$(document).on('input', '#bt-focus-source, #bt-focus-translated', function () {
+		autosizeTextarea(this);
+	});
+
+	$(autosizeAll);
+	$(window).on('load', autosizeAll);
 })(jQuery);

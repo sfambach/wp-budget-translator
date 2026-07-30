@@ -17,6 +17,19 @@ use BudgetTranslator\Settings;
 final class TranslationService {
 
 	/**
+	 * Max provider API calls during a public frontend page render.
+	 * Prevents PHP max_execution_time fatals when many segments are uncached.
+	 */
+	private const FRONTEND_API_BUDGET = 5;
+
+	/**
+	 * Provider calls used in the current PHP request.
+	 *
+	 * @var int
+	 */
+	private static int $api_calls_used = 0;
+
+	/**
 	 * Repository.
 	 *
 	 * @var TranslationRepository
@@ -125,7 +138,13 @@ final class TranslationService {
 		$provider = ProviderFactory::make();
 
 		foreach ( $misses as $segment ) {
+			if ( ! $this->can_fetch_from_provider() ) {
+				// Leave untranslated for this request; batch job / next view fills cache.
+				continue;
+			}
+
 			try {
+				++self::$api_calls_used;
 				[ $masked, $tokens ] = LinkGuard::mask( $segment );
 				$translated            = $provider->translate( $masked, $source_lang, $target_lang );
 				$translated            = LinkGuard::unmask( $translated, $tokens );
@@ -142,6 +161,24 @@ final class TranslationService {
 		}
 
 		return $map;
+	}
+
+	/**
+	 * Whether another provider call is allowed in this request.
+	 *
+	 * Admin, REST (review/batch) and cron have no budget limit.
+	 * Public frontend is capped so slow free APIs cannot kill the page.
+	 */
+	private function can_fetch_from_provider(): bool {
+		if ( is_admin() || wp_doing_cron() ) {
+			return true;
+		}
+
+		if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
+			return true;
+		}
+
+		return self::$api_calls_used < self::FRONTEND_API_BUDGET;
 	}
 
 	/**
