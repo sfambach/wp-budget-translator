@@ -79,7 +79,8 @@ final class MyMemoryProvider implements ProviderInterface {
 		$response = wp_remote_get(
 			$url,
 			array(
-				'timeout' => 8,
+				// Long motherboard/product blurbs often need >8s; admin sync translates in one request.
+				'timeout' => 20,
 				'headers' => array(
 					'Accept' => 'application/json',
 				),

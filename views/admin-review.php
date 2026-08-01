@@ -11,6 +11,7 @@
  * @var string $status
  * @var string $lang
  * @var string $search
+ * @var string $sort
  * @var int $page
  */
 
@@ -20,13 +21,25 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$base_url = admin_url( 'admin.php?page=budget-translator-review' );
+$base_url = add_query_arg(
+	array_filter(
+		array(
+			'page'      => 'budget-translator',
+			'bt_status' => '' === $status ? 'all' : $status,
+			'bt_lang'   => $lang,
+			'bt_sort'   => $sort,
+			's'         => $search,
+		),
+		static fn( $v ): bool => '' !== (string) $v
+	),
+	admin_url( 'admin.php' )
+);
 ?>
 <div class="wrap bt-admin">
-	<h1><?php echo esc_html__( 'Translations', 'budget-translator' ); ?></h1>
+	<h1><?php echo esc_html__( 'Bulk', 'budget-translator' ); ?></h1>
 
 	<form method="get" class="bt-review-filters">
-		<input type="hidden" name="page" value="budget-translator-review" />
+		<input type="hidden" name="page" value="budget-translator" />
 		<label>
 			<span class="screen-reader-text"><?php echo esc_html__( 'Status', 'budget-translator' ); ?></span>
 			<select name="bt_status">
@@ -46,14 +59,22 @@ $base_url = admin_url( 'admin.php?page=budget-translator-review' );
 				<?php endforeach; ?>
 			</select>
 		</label>
+		<label>
+			<span class="screen-reader-text"><?php echo esc_html__( 'Sort', 'budget-translator' ); ?></span>
+			<select name="bt_sort">
+				<option value="newest" <?php selected( $sort, 'newest' ); ?>><?php echo esc_html__( 'Newest first', 'budget-translator' ); ?></option>
+				<option value="oldest" <?php selected( $sort, 'oldest' ); ?>><?php echo esc_html__( 'Oldest first', 'budget-translator' ); ?></option>
+				<option value="shortest" <?php selected( $sort, 'shortest' ); ?>><?php echo esc_html__( 'Shortest first', 'budget-translator' ); ?></option>
+				<option value="longest" <?php selected( $sort, 'longest' ); ?>><?php echo esc_html__( 'Longest first', 'budget-translator' ); ?></option>
+			</select>
+		</label>
 		<input type="search" name="s" value="<?php echo esc_attr( $search ); ?>" placeholder="<?php echo esc_attr__( 'Search…', 'budget-translator' ); ?>" />
 		<?php submit_button( __( 'Filter', 'budget-translator' ), 'secondary', '', false ); ?>
 	</form>
 
 	<p>
-		<a class="button button-primary" href="<?php echo esc_url( admin_url( 'admin.php?page=budget-translator-focus' ) ); ?>"><?php echo esc_html__( 'Review one by one', 'budget-translator' ); ?></a>
+		<a class="button button-primary" href="<?php echo esc_url( admin_url( 'admin.php?page=budget-translator-focus' ) ); ?>"><?php echo esc_html__( 'One by one', 'budget-translator' ); ?></a>
 		<button type="button" class="button" id="bt-confirm-selected"><?php echo esc_html__( 'Confirm selected', 'budget-translator' ); ?></button>
-		<button type="button" class="button" id="bt-purge-invalid"><?php echo esc_html__( 'Remove invalid API messages', 'budget-translator' ); ?></button>
 		<span class="description"><?php printf( esc_html__( '%d segments', 'budget-translator' ), (int) $result['total'] ); ?></span>
 	</p>
 
@@ -80,6 +101,17 @@ $base_url = admin_url( 'admin.php?page=budget-translator-review' );
 					<tr data-id="<?php echo esc_attr( (string) $row->id ); ?>">
 						<th class="check-column"><input type="checkbox" class="bt-row-check" value="<?php echo esc_attr( (string) $row->id ); ?>" /></th>
 						<td>
+							<?php
+							$prev_source = isset( $row->previous_source_text ) ? (string) $row->previous_source_text : '';
+							if ( '' !== $prev_source && $prev_source !== (string) $row->source_text ) :
+								$diff = \BudgetTranslator\Admin\SourceDiff::render( $prev_source, (string) $row->source_text );
+								if ( '' !== $diff ) :
+									?>
+									<div class="bt-source-diff" title="<?php echo esc_attr__( 'Source changed', 'budget-translator' ); ?>"><?php echo wp_kses_post( $diff ); ?></div>
+									<?php
+								endif;
+							endif;
+							?>
 							<textarea class="bt-source-text large-text" rows="3"><?php echo esc_textarea( (string) $row->source_text ); ?></textarea>
 						</td>
 						<td>

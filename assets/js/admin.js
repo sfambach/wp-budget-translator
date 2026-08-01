@@ -58,11 +58,14 @@
 		$n.addClass(isError ? 'notice-error' : 'notice-success');
 		$n.find('p').text(msg);
 		$('.bt-admin h1').first().after($n);
+		if (window.wp && wp.a11y && wp.a11y.speak) {
+			wp.a11y.speak(msg);
+		}
 		setTimeout(function () {
 			$n.fadeOut(200, function () {
 				$(this).remove();
 			});
-		}, 2500);
+		}, 4000);
 	}
 
 	$(document).on('click', '.bt-save-row', function () {
@@ -145,28 +148,6 @@
 		});
 	});
 
-	$('#bt-purge-invalid').on('click', function () {
-		var $btn = $(this);
-		$btn.prop('disabled', true);
-		$.ajax({
-			url: btAdmin.restUrl + 'translations/purge-invalid',
-			method: 'POST',
-			headers: headers(),
-			success: function (res) {
-				notify((btAdmin.i18n.purged || 'Purged') + ' (' + (res.count || 0) + ')');
-				window.setTimeout(function () {
-					window.location.reload();
-				}, 600);
-			},
-			error: function () {
-				notify(btAdmin.i18n.error, true);
-			},
-			complete: function () {
-				$btn.prop('disabled', false);
-			}
-		});
-	});
-
 	$('#bt-check-all').on('change', function () {
 		$('.bt-row-check').prop('checked', $(this).is(':checked'));
 	});
@@ -202,11 +183,23 @@
 		if (!$el.length || !data) {
 			return;
 		}
-		var done = data.done || 0;
-		var total = data.total || 0;
+		var done = parseInt(data.done, 10) || 0;
+		var total = parseInt(data.total, 10) || 0;
 		var state = data.state || '-';
+		var pct = total > 0 ? Math.round((done / total) * 100) : 0;
 		$el.attr('data-state', state);
-		$el.html('<p>Progress: ' + done + ' / ' + total + ' (' + state + ')</p>');
+		var label = (btAdmin.i18n.progress || 'Site queue: %1$d / %2$d (%3$s%%)')
+			.replace('%1$d', String(done))
+			.replace('%2$d', String(total))
+			.replace('%3$s', String(pct));
+		var note = btAdmin.i18n.queueNote
+			? '<br /><span class="description">' + btAdmin.i18n.queueNote + '</span>'
+			: '';
+		$el.html(
+			'<p>' + label + ' — ' + state + note + '</p>' +
+			'<div class="bt-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '">' +
+			'<span class="bt-progress__bar" style="width:' + pct + '%"></span></div>'
+		);
 	}
 
 	$('#bt-process-job').on('click', function () {

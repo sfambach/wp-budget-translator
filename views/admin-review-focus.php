@@ -20,11 +20,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$list_url  = admin_url( 'admin.php?page=budget-translator-review' );
+$list_url  = admin_url( 'admin.php?page=budget-translator' );
 $focus_url = admin_url( 'admin.php?page=budget-translator-focus' );
 ?>
 <div class="wrap bt-admin bt-focus" data-lang="<?php echo esc_attr( $lang ); ?>">
-	<h1><?php echo esc_html__( 'Review one by one', 'budget-translator' ); ?></h1>
+	<h1><?php echo esc_html__( 'One by one', 'budget-translator' ); ?></h1>
 
 	<p>
 		<a class="button" href="<?php echo esc_url( $list_url ); ?>"><?php echo esc_html__( 'Back to list', 'budget-translator' ); ?></a>
@@ -69,6 +69,17 @@ $focus_url = admin_url( 'admin.php?page=budget-translator-focus' );
 			</div>
 
 			<label class="bt-focus-card__label" for="bt-focus-source"><?php echo esc_html__( 'Source', 'budget-translator' ); ?></label>
+			<?php
+			$prev_source = isset( $item->previous_source_text ) ? (string) $item->previous_source_text : '';
+			if ( '' !== $prev_source && $prev_source !== (string) $item->source_text ) :
+				$diff = \BudgetTranslator\Admin\SourceDiff::render( $prev_source, (string) $item->source_text );
+				if ( '' !== $diff ) :
+					?>
+					<div class="bt-source-diff"><?php echo wp_kses_post( $diff ); ?></div>
+					<?php
+				endif;
+			endif;
+			?>
 			<textarea id="bt-focus-source" class="bt-source-text large-text" rows="8"><?php echo esc_textarea( (string) $item->source_text ); ?></textarea>
 
 			<label class="bt-focus-card__label" for="bt-focus-translated"><?php echo esc_html__( 'Translation', 'budget-translator' ); ?></label>

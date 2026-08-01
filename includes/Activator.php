@@ -14,7 +14,7 @@ namespace BudgetTranslator;
  */
 final class Activator {
 
-	public const DB_VERSION = '1.0.0';
+	public const DB_VERSION = '1.1.0';
 
 	/**
 	 * Run on plugin activation.
@@ -52,6 +52,7 @@ final class Activator {
 			source_lang varchar(10) NOT NULL,
 			target_lang varchar(10) NOT NULL,
 			source_text longtext NOT NULL,
+			previous_source_text longtext NULL,
 			translated_text longtext NOT NULL,
 			status varchar(20) NOT NULL DEFAULT 'auto',
 			provider varchar(50) NOT NULL DEFAULT '',

@@ -1,0 +1,832 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Budget Translator 1.3.0\n"
+"Report-Msgid-Bugs-To: https://github.com/sfambach/wp-budget-translator/issues\n"
+"Last-Translator: Stefan\n"
+"Language-Team: German\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-08-01T14:49:23+00:00\n"
+"PO-Revision-Date: 2026-08-01 16:50+0200\n"
+"Language: de_DE\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Budget Translator release script\n"
+"X-Domain: budget-translator\n"
+
+#. Plugin Name of the plugin
+#: budget-translator.php
+#: includes/Admin/PostReviewPage.php:54
+#: includes/Admin/ReviewPage.php:36
+#: includes/Admin/ReviewPage.php:37
+#: views/admin-settings.php:31
+msgid "Budget Translator"
+msgstr "Budget Translator"
+
+#. Plugin URI of the plugin
+#: budget-translator.php
+msgid "https://github.com/sfambach/wp-budget-translator"
+msgstr "https://github.com/sfambach/wp-budget-translator"
+
+#. Description of the plugin
+#: budget-translator.php
+msgid "Affordable automatic website translation with local segment caching, review, and optional premium API providers."
+msgstr "Günstige automatische Website-Übersetzung mit lokalem Segment-Cache, Review und optionalen Premium-API-Anbietern."
+
+#. Author of the plugin
+#: budget-translator.php
+msgid "Stefan"
+msgstr "Stefan"
+
+#: includes/Admin/Assets.php:56
+msgid "Saved."
+msgstr "Gespeichert."
+
+#: includes/Admin/Assets.php:57
+msgid "Confirmed."
+msgstr "Bestätigt."
+
+#: includes/Admin/Assets.php:58
+msgid "Something went wrong."
+msgstr "Etwas ist schiefgelaufen."
+
+#: includes/Admin/Assets.php:59
+msgid "Translation job running…"
+msgstr "Übersetzungsauftrag läuft…"
+
+#: includes/Admin/Assets.php:60
+msgid "Translation job finished."
+msgstr "Übersetzungsauftrag abgeschlossen."
+
+#: includes/Admin/Assets.php:61
+msgid "Retranslated."
+msgstr "Neu übersetzt."
+
+#: includes/Admin/Assets.php:62
+msgid "Nothing left to review."
+msgstr "Nichts mehr zu prüfen."
+
+#: includes/Admin/Assets.php:63
+msgid "Post queued for translation."
+msgstr "Beitrag zur Übersetzung eingereiht."
+
+#: includes/Admin/Assets.php:64
+#, php-format
+msgid "Site queue: %1$d / %2$d (%3$s%%)"
+msgstr "Website-Warteschlange: %1$d / %2$d (%3$s%%)"
+
+#: includes/Admin/Assets.php:65
+msgid "Queue progress is machine translation only — it does not confirm segments."
+msgstr "Der Fortschritt betrifft nur die Maschinenübersetzung — Segmente werden nicht bestätigt."
+
+#: includes/Admin/PostReviewPage.php:39
+#: includes/Admin/PostReviewPage.php:40
+#: views/admin-review-by-post.php:43
+msgid "By post"
+msgstr "Nach Beitrag"
+
+#: includes/Admin/PostReviewPage.php:70
+msgid "Review translations for this post"
+msgstr "Übersetzungen für diesen Beitrag prüfen"
+
+#: includes/Admin/PostReviewPage.php:78
+#: includes/Admin/PostReviewPage.php:127
+#: includes/Admin/SettingsPage.php:155
+#: includes/Admin/SettingsPage.php:179
+#: includes/Admin/SettingsPage.php:209
+msgid "Forbidden."
+msgstr "Nicht erlaubt."
+
+#: includes/Admin/PostReviewPage.php:169
+msgid "Text not found in this post."
+msgstr "Text in diesem Beitrag nicht gefunden."
+
+#: includes/Admin/PostReviewPage.php:179
+msgid "Translation failed for this text."
+msgstr "Übersetzung für diesen Text fehlgeschlagen."
+
+#: includes/Admin/PostReviewPage.php:312
+msgid "Post not found."
+msgstr "Beitrag nicht gefunden."
+
+#: includes/Admin/PostReviewPage.php:464
+msgid "Translation provider did not return a result for every text."
+msgstr "Der Übersetzungsanbieter hat nicht für jeden Text ein Ergebnis geliefert."
+
+#: includes/Admin/ReviewPage.php:47
+#: includes/Admin/ReviewPage.php:48
+#: views/admin-review.php:39
+msgid "Bulk"
+msgstr "Sammelansicht"
+
+#: includes/Admin/ReviewPage.php:61
+#: includes/Admin/ReviewPage.php:62
+#: views/admin-review-focus.php:27
+#: views/admin-review.php:76
+msgid "One by one"
+msgstr "Einzeln"
+
+#: includes/Admin/SettingsPage.php:38
+#: includes/Admin/SettingsPage.php:39
+msgid "Settings"
+msgstr "Einstellungen"
+
+#: includes/Admin/SettingsPage.php:194
+msgid "Export failed."
+msgstr "Export fehlgeschlagen."
+
+#: includes/Frontend/ContentFilters.php:176
+msgid "Budget Translator: some passages are still in the source language (on-the-fly limit). Run “Translate website now” or reload later."
+msgstr "Budget Translator: Einige Passagen sind noch in der Quellsprache (On-the-fly-Limit). „Website jetzt übersetzen“ ausführen oder später neu laden."
+
+#: includes/Frontend/LanguageSwitcher.php:168
+#: views/admin-review-by-post.php:94
+#: views/admin-review-by-post.php:251
+#: views/admin-review-focus.php:45
+#: views/admin-review.php:54
+msgid "Language"
+msgstr "Sprache"
+
+#: includes/Plugin.php:109
+msgid "Every Minute (Budget Translator)"
+msgstr "Jede Minute (Budget Translator)"
+
+#: includes/Settings.php:98
+msgid "German"
+msgstr "Deutsch"
+
+#: includes/Settings.php:99
+msgid "English"
+msgstr "Englisch"
+
+#: includes/Settings.php:100
+msgid "French"
+msgstr "Französisch"
+
+#: includes/Settings.php:101
+msgid "Spanish"
+msgstr "Spanisch"
+
+#: includes/Settings.php:102
+msgid "Italian"
+msgstr "Italienisch"
+
+#: includes/Settings.php:103
+msgid "Dutch"
+msgstr "Niederländisch"
+
+#: includes/Settings.php:104
+msgid "Polish"
+msgstr "Polnisch"
+
+#: includes/Settings.php:105
+msgid "Portuguese"
+msgstr "Portugiesisch"
+
+#: includes/Settings.php:106
+msgid "Russian"
+msgstr "Russisch"
+
+#: includes/Settings.php:107
+msgid "Ukrainian"
+msgstr "Ukrainisch"
+
+#: includes/Settings.php:108
+msgid "Czech"
+msgstr "Tschechisch"
+
+#: includes/Settings.php:109
+msgid "Swedish"
+msgstr "Schwedisch"
+
+#: includes/Settings.php:110
+msgid "Danish"
+msgstr "Dänisch"
+
+#: includes/Settings.php:111
+msgid "Finnish"
+msgstr "Finnisch"
+
+#: includes/Settings.php:112
+msgid "Norwegian"
+msgstr "Norwegisch"
+
+#: includes/Settings.php:113
+msgid "Japanese"
+msgstr "Japanisch"
+
+#: includes/Settings.php:114
+msgid "Chinese"
+msgstr "Chinesisch"
+
+#: includes/Settings.php:115
+msgid "Arabic"
+msgstr "Arabisch"
+
+#: includes/Settings.php:116
+msgid "Turkish"
+msgstr "Türkisch"
+
+#: includes/Settings.php:117
+msgid "Hungarian"
+msgstr "Ungarisch"
+
+#: includes/Settings.php:128
+msgid "MyMemory (free)"
+msgstr "MyMemory (kostenlos)"
+
+#: includes/Settings.php:129
+msgid "LibreTranslate (free / self-hosted)"
+msgstr "LibreTranslate (kostenlos / selbst gehostet)"
+
+#: includes/Settings.php:130
+msgid "DeepL (API key)"
+msgstr "DeepL (API-Schlüssel)"
+
+#: includes/Settings.php:131
+msgid "Google Cloud Translation (API key)"
+msgstr "Google Cloud Translation (API-Schlüssel)"
+
+#: includes/Translation/SourceAutocorrect.php:26
+msgid "Remove spaces before punctuation (e.g. “hier :” → “hier:”, “Ende .” → “Ende.”)"
+msgstr "Leerzeichen vor Satzzeichen entfernen (z. B. „hier :“ → „hier:“, „Ende .“ → „Ende.“)"
+
+#: includes/Translation/SourceAutocorrect.php:27
+msgid "Collapse multiple spaces into one"
+msgstr "Mehrere Leerzeichen zu einem zusammenfassen"
+
+#: includes/Translation/SourceAutocorrect.php:28
+msgid "No space at mid-word line breaks (e.g. “el↵ectrolytic” → “electrolytic”; normal line breaks stay spaced)"
+msgstr "Kein Leerzeichen bei Zeilenumbrüchen mitten im Wort (z. B. „el↵ectrolytic“ → „electrolytic“; normale Umbrüche bleiben mit Leerzeichen)"
+
+#: includes/Translation/SourceAutocorrect.php:29
+msgid "Capitalize sentence starts (first letter and after . ! ?)"
+msgstr "Satzanfänge großschreiben (erster Buchstabe und nach . ! ?)"
+
+#: views/admin-review-by-post.php:46
+msgid "Open a post: missing texts are translated automatically. Confirm the suggestions you want to keep."
+msgstr "Beitrag öffnen: Fehlende Texte werden automatisch übersetzt. Bestätigen Sie die Vorschläge, die Sie behalten möchten."
+
+#. translators: 1: failed/remaining count, 2: error detail
+#: views/admin-review-by-post.php:60
+#, php-format
+msgid "Could not translate %1$d text(s). %2$s"
+msgstr "%1$d Text(e) konnten nicht übersetzt werden. %2$s"
+
+#: views/admin-review-by-post.php:62
+msgid "Try again, or switch provider in settings."
+msgstr "Erneut versuchen oder Anbieter in den Einstellungen wechseln."
+
+#. translators: 1: newly translated count, 2: still remaining
+#: views/admin-review-by-post.php:71
+#, php-format
+msgid "Translated %1$d text(s); %2$d still missing. Retry Translate for the rest."
+msgstr "%1$d Text(e) übersetzt; %2$d fehlen noch. Für den Rest „Übersetzen“ erneut versuchen."
+
+#. translators: %d: newly translated count
+#: views/admin-review-by-post.php:82
+#, php-format
+msgid "Translated %d text(s) for this post."
+msgstr "%d Text(e) für diesen Beitrag übersetzt."
+
+#: views/admin-review-by-post.php:102
+msgid "Coverage"
+msgstr "Abdeckung"
+
+#: views/admin-review-by-post.php:104
+msgid "All posts"
+msgstr "Alle Beiträge"
+
+#: views/admin-review-by-post.php:105
+msgid "Not translated"
+msgstr "Nicht übersetzt"
+
+#: views/admin-review-by-post.php:106
+msgid "Partially translated"
+msgstr "Teilweise übersetzt"
+
+#: views/admin-review-by-post.php:107
+msgid "Fully translated (any status)"
+msgstr "Vollständig übersetzt (jeder Status)"
+
+#: views/admin-review-by-post.php:108
+#: views/admin-review-by-post.php:244
+msgid "Needs work"
+msgstr "Noch offen"
+
+#: views/admin-review-by-post.php:109
+msgid "Fully confirmed"
+msgstr "Vollständig bestätigt"
+
+#: views/admin-review-by-post.php:112
+msgid "Search posts…"
+msgstr "Beiträge suchen…"
+
+#: views/admin-review-by-post.php:113
+#: views/admin-review-by-post.php:258
+#: views/admin-review.php:72
+msgid "Filter"
+msgstr "Filtern"
+
+#: views/admin-review-by-post.php:119
+msgid "Title"
+msgstr "Titel"
+
+#: views/admin-review-by-post.php:120
+msgid "Type"
+msgstr "Typ"
+
+#: views/admin-review-by-post.php:121
+msgid "Translated"
+msgstr "Übersetzt"
+
+#: views/admin-review-by-post.php:122
+#: views/admin-review-by-post.php:246
+#: views/admin-review.php:49
+msgid "Confirmed"
+msgstr "Bestätigt"
+
+#: views/admin-review-by-post.php:123
+msgid "Modified"
+msgstr "Geändert"
+
+#: views/admin-review-by-post.php:124
+#: views/admin-review-by-post.php:328
+#: views/admin-review.php:93
+msgid "Actions"
+msgstr "Aktionen"
+
+#: views/admin-review-by-post.php:129
+msgid "No posts found for this filter."
+msgstr "Keine Beiträge für diesen Filter gefunden."
+
+#. translators: %d pending count
+#: views/admin-review-by-post.php:164
+#, php-format
+msgid "%d need work"
+msgstr "%d noch offen"
+
+#: views/admin-review-by-post.php:170
+#: views/admin-settings.php:285
+msgid "Review translations"
+msgstr "Übersetzungen prüfen"
+
+#: views/admin-review-by-post.php:219
+msgid "Back to posts"
+msgstr "Zurück zu Beiträgen"
+
+#: views/admin-review-by-post.php:220
+msgid "Edit post"
+msgstr "Beitrag bearbeiten"
+
+#. translators: 1: confirmed pct, 2: texts needing work
+#: views/admin-review-by-post.php:227
+#, php-format
+msgid "Confirmed %1$d%% · %2$d texts still need work"
+msgstr "%1$d %% bestätigt · %2$d Texte noch offen"
+
+#: views/admin-review-by-post.php:234
+msgid "This list shows texts from this post that still need confirmation. New texts are machine-translated when you open the post."
+msgstr "Diese Liste zeigt Texte dieses Beitrags, die noch bestätigt werden müssen. Neue Texte werden beim Öffnen maschinell übersetzt."
+
+#: views/admin-review-by-post.php:242
+#: views/admin-review-by-post.php:327
+#: views/admin-review.php:44
+#: views/admin-review.php:92
+msgid "Status"
+msgstr "Status"
+
+#: views/admin-review-by-post.php:245
+msgid "Translated, not confirmed"
+msgstr "Übersetzt, nicht bestätigt"
+
+#: views/admin-review-by-post.php:247
+msgid "All texts"
+msgstr "Alle Texte"
+
+#: views/admin-review-by-post.php:268
+msgid "Retry failed translations"
+msgstr "Fehlgeschlagene Übersetzungen erneut versuchen"
+
+#: views/admin-review-by-post.php:271
+#: views/admin-review.php:77
+msgid "Confirm selected"
+msgstr "Auswahl bestätigen"
+
+#. translators: 1: rows shown, 2: still missing machine translation
+#: views/admin-review-by-post.php:276
+#, php-format
+msgid "%1$d shown · %2$d not translated yet"
+msgstr "%1$d angezeigt · %2$d noch nicht übersetzt"
+
+#. translators: %d: count
+#: views/admin-review-by-post.php:294
+#, php-format
+msgid "Automatically translated %d new text(s). Please confirm them below."
+msgstr "%d neue(r) Text(e) automatisch übersetzt. Bitte unten bestätigen."
+
+#. translators: 1: ok count, 2: remaining
+#: views/admin-review-by-post.php:304
+#, php-format
+msgid "Automatically translated %1$d text(s); %2$d still failed — use Retry."
+msgstr "%1$d Text(e) automatisch übersetzt; %2$d weiterhin fehlgeschlagen — „Erneut versuchen“ nutzen."
+
+#: views/admin-review-by-post.php:316
+msgid "Some texts could not be translated yet. Use “Retry failed translations”."
+msgstr "Einige Texte konnten noch nicht übersetzt werden. „Fehlgeschlagene Übersetzungen erneut versuchen“ nutzen."
+
+#: views/admin-review-by-post.php:324
+#: views/admin-review-focus.php:71
+#: views/admin-review.php:89
+msgid "Source"
+msgstr "Quelle"
+
+#: views/admin-review-by-post.php:325
+#: views/admin-review-focus.php:85
+#: views/admin-review.php:90
+msgid "Translation"
+msgstr "Übersetzung"
+
+#: views/admin-review-by-post.php:326
+#: views/admin-review.php:91
+msgid "Lang"
+msgstr "Spr."
+
+#: views/admin-review-by-post.php:336
+msgid "All texts in this post are confirmed. Switch to “Confirmed” or “All texts” to browse them."
+msgstr "Alle Texte in diesem Beitrag sind bestätigt. Für die Ansicht zu „Bestätigt“ oder „Alle Texte“ wechseln."
+
+#: views/admin-review-by-post.php:338
+msgid "No texts for this filter."
+msgstr "Keine Texte für diesen Filter."
+
+#: views/admin-review-by-post.php:357
+msgid "Not translated yet"
+msgstr "Noch nicht übersetzt"
+
+#: views/admin-review-by-post.php:360
+msgid "missing"
+msgstr "fehlend"
+
+#: views/admin-review-by-post.php:369
+msgid "Translate"
+msgstr "Übersetzen"
+
+#: views/admin-review-by-post.php:372
+#: views/admin-review.php:123
+msgid "Open"
+msgstr "Öffnen"
+
+#: views/admin-review-by-post.php:373
+#: views/admin-review-focus.php:101
+#: views/admin-review.php:124
+msgid "Save"
+msgstr "Speichern"
+
+#: views/admin-review-by-post.php:374
+#: views/admin-review.php:125
+msgid "Confirm"
+msgstr "Bestätigen"
+
+#: views/admin-review-by-post.php:375
+#: views/admin-review-focus.php:102
+#: views/admin-review.php:126
+msgid "Retranslate"
+msgstr "Neu übersetzen"
+
+#: views/admin-review-focus.php:30
+msgid "Back to list"
+msgstr "Zurück zur Liste"
+
+#. translators: %d: pending count
+#: views/admin-review-focus.php:35
+#, php-format
+msgid "%d pending"
+msgstr "%d ausstehend"
+
+#: views/admin-review-focus.php:47
+#: views/admin-review.php:56
+msgid "All languages"
+msgstr "Alle Sprachen"
+
+#: views/admin-review-focus.php:56
+msgid "Nothing left to review. All pending translations are confirmed."
+msgstr "Nichts mehr zu prüfen. Alle ausstehenden Übersetzungen sind bestätigt."
+
+#: views/admin-review-focus.php:96
+#: views/admin-review-focus.php:98
+msgid "Previous"
+msgstr "Zurück"
+
+#: views/admin-review-focus.php:103
+msgid "Confirm & next"
+msgstr "Bestätigen & weiter"
+
+#: views/admin-review-focus.php:106
+#: views/admin-review-focus.php:108
+msgid "Skip"
+msgstr "Überspringen"
+
+#: views/admin-review-focus.php:113
+msgid "This entry is already confirmed. Use Previous/Skip to move, or edit and save again."
+msgstr "Dieser Eintrag ist bereits bestätigt. Mit Zurück/Überspringen weitergehen oder bearbeiten und erneut speichern."
+
+#: views/admin-review.php:46
+msgid "Pending review"
+msgstr "Prüfung ausstehend"
+
+#: views/admin-review.php:47
+msgid "Auto"
+msgstr "Auto"
+
+#: views/admin-review.php:48
+msgid "Edited"
+msgstr "Bearbeitet"
+
+#: views/admin-review.php:50
+msgid "All statuses"
+msgstr "Alle Status"
+
+#: views/admin-review.php:63
+msgid "Sort"
+msgstr "Sortierung"
+
+#: views/admin-review.php:65
+msgid "Newest first"
+msgstr "Neueste zuerst"
+
+#: views/admin-review.php:66
+msgid "Oldest first"
+msgstr "Älteste zuerst"
+
+#: views/admin-review.php:67
+msgid "Shortest first"
+msgstr "Kürzeste zuerst"
+
+#: views/admin-review.php:68
+msgid "Longest first"
+msgstr "Längste zuerst"
+
+#: views/admin-review.php:71
+msgid "Search…"
+msgstr "Suchen…"
+
+#: views/admin-review.php:78
+#, php-format
+msgid "%d segments"
+msgstr "%d Segmente"
+
+#: views/admin-review.php:82
+msgid "You can edit the German source and the translation together. Saving a changed source also updates matching text in posts, pages and menus."
+msgstr "Sie können Quelltext und Übersetzung gemeinsam bearbeiten. Beim Speichern einer geänderten Quelle wird passender Text in Beiträgen, Seiten und Menüs mitaktualisiert."
+
+#: views/admin-review.php:98
+msgid "No translations yet. Run “Translate website now” from Settings."
+msgstr "Noch keine Übersetzungen. Unter Einstellungen „Website jetzt übersetzen“ ausführen."
+
+#: views/admin-review.php:110
+msgid "Source changed"
+msgstr "Quelle geändert"
+
+#: views/admin-settings.php:34
+msgid "Translation job queued. Progress updates below."
+msgstr "Übersetzungsauftrag eingereiht. Fortschritt siehe unten."
+
+#. translators: 1: imported count, 2: skipped count
+#: views/admin-settings.php:42
+#, php-format
+msgid "Import finished: %1$d imported, %2$d skipped."
+msgstr "Import abgeschlossen: %1$d importiert, %2$d übersprungen."
+
+#: views/admin-settings.php:49
+msgid "Import failed. Please upload a valid Budget Translator JSON export."
+msgstr "Import fehlgeschlagen. Bitte einen gültigen Budget-Translator-JSON-Export hochladen."
+
+#: views/admin-settings.php:59
+msgid "Source language"
+msgstr "Quellsprache"
+
+#: views/admin-settings.php:69
+msgid "Target languages"
+msgstr "Zielsprachen"
+
+#: views/admin-settings.php:79
+msgid "Translated pages use URL prefixes like /en/…"
+msgstr "Übersetzte Seiten nutzen URL-Präfixe wie /en/…"
+
+#: views/admin-settings.php:83
+msgid "Translation provider"
+msgstr "Übersetzungsanbieter"
+
+#: views/admin-settings.php:93
+msgid "MyMemory email (optional)"
+msgstr "MyMemory-E-Mail (optional)"
+
+#: views/admin-settings.php:96
+msgid "Raises the free daily quota."
+msgstr "Erhöht das kostenlose Tageskontingent."
+
+#: views/admin-settings.php:100
+msgid "LibreTranslate URL"
+msgstr "LibreTranslate-URL"
+
+#: views/admin-settings.php:106
+msgid "LibreTranslate API key"
+msgstr "LibreTranslate-API-Schlüssel"
+
+#: views/admin-settings.php:112
+msgid "DeepL API key"
+msgstr "DeepL-API-Schlüssel"
+
+#: views/admin-settings.php:118
+msgid "DeepL API URL"
+msgstr "DeepL-API-URL"
+
+#: views/admin-settings.php:121
+msgid "Use https://api.deepl.com for Pro accounts."
+msgstr "Für Pro-Konten https://api.deepl.com verwenden."
+
+#: views/admin-settings.php:125
+msgid "Google API key"
+msgstr "Google-API-Schlüssel"
+
+#: views/admin-settings.php:131
+msgid "Options"
+msgstr "Optionen"
+
+#: views/admin-settings.php:133
+msgid "Enable /lang/ URL prefixes"
+msgstr "/lang/-URL-Präfixe aktivieren"
+
+#: views/admin-settings.php:134
+msgid "Translate missing segments on the fly"
+msgstr "Fehlende Segmente on-the-fly übersetzen"
+
+#: views/admin-settings.php:135
+msgid "Show language switcher (footer / primary menu)"
+msgstr "Sprachumschalter anzeigen (Footer / Hauptmenü)"
+
+#: views/admin-settings.php:136
+msgid "Auto-queue changed posts/menus for translation on save"
+msgstr "Geänderte Beiträge/Menüs beim Speichern automatisch zur Übersetzung einreihen"
+
+#: views/admin-settings.php:137
+msgid "Show incomplete-translation notice to visitors"
+msgstr "Hinweis zu unvollständiger Übersetzung für Besucher anzeigen"
+
+#: views/admin-settings.php:138
+msgid "Admins always see a subtle notice when on-the-fly budget skipped segments."
+msgstr "Admins sehen immer einen dezenten Hinweis, wenn das On-the-fly-Budget Segmente übersprungen hat."
+
+#: views/admin-settings.php:142
+msgid "Source auto-corrections"
+msgstr "Quelltext-Autokorrekturen"
+
+#: views/admin-settings.php:151
+msgid "Enable source auto-corrections"
+msgstr "Quelltext-Autokorrekturen aktivieren"
+
+#: views/admin-settings.php:153
+msgid "Applied when extracting/caching text for translation (does not rewrite the post in the editor). Default: on."
+msgstr "Wird beim Extrahieren/Cachen von Text für die Übersetzung angewendet (ändert den Beitrag im Editor nicht). Standard: an."
+
+#: views/admin-settings.php:165
+msgid "Do not translate"
+msgstr "Nicht übersetzen"
+
+#: views/admin-settings.php:168
+msgid "One phrase per line (brands, codes, shortcodes). Never sent to the API."
+msgstr "Eine Phrase pro Zeile (Marken, Codes, Shortcodes). Wird nie an die API gesendet."
+
+#. translators: %s: language code
+#: views/admin-settings.php:173
+#, php-format
+msgid "Glossary (%s)"
+msgstr "Glossar (%s)"
+
+#: views/admin-settings.php:176
+msgid "One entry per line: Source = Translation"
+msgstr "Ein Eintrag pro Zeile: Quelle = Übersetzung"
+
+#: views/admin-settings.php:181
+msgid "Exclude post types"
+msgstr "Beitragstypen ausschließen"
+
+#: views/admin-settings.php:194
+msgid "Exclude post IDs"
+msgstr "Beitrags-IDs ausschließen"
+
+#: views/admin-settings.php:197
+msgid "Comma-separated IDs."
+msgstr "Kommagetrennte IDs."
+
+#: views/admin-settings.php:201
+msgid "Exclude URL paths"
+msgstr "URL-Pfade ausschließen"
+
+#: views/admin-settings.php:204
+msgid "One path prefix per line, e.g. /shop"
+msgstr "Ein Pfadpräfix pro Zeile, z. B. /shop"
+
+#: views/admin-settings.php:209
+msgid "Save settings"
+msgstr "Einstellungen speichern"
+
+#: views/admin-settings.php:214
+msgid "Translate website"
+msgstr "Website übersetzen"
+
+#: views/admin-settings.php:215
+msgid "Queues all published posts, pages, menus, SEO meta and image alts for the selected target languages. Identical passages are translated only once."
+msgstr "Reiht alle veröffentlichten Beiträge, Seiten, Menüs, SEO-Meta und Bild-Alts für die gewählten Zielsprachen ein. Identische Passagen werden nur einmal übersetzt."
+
+#: views/admin-settings.php:219
+msgid "Translate website now"
+msgstr "Website jetzt übersetzen"
+
+#: views/admin-settings.php:220
+msgid "Process next chunk"
+msgstr "Nächsten Abschnitt verarbeiten"
+
+#. translators: 1: done, 2: total, 3: percent
+#: views/admin-settings.php:234
+#, php-format
+msgid "Progress: %1$d / %2$d (%3$d%%)"
+msgstr "Fortschritt: %1$d / %2$d (%3$d%%)"
+
+#: views/admin-settings.php:250
+msgid "Export / Import"
+msgstr "Export / Import"
+
+#: views/admin-settings.php:253
+msgid "Export translations (JSON)"
+msgstr "Übersetzungen exportieren (JSON)"
+
+#: views/admin-settings.php:265
+msgid "Do not overwrite confirmed entries"
+msgstr "Bestätigte Einträge nicht überschreiben"
+
+#: views/admin-settings.php:268
+msgid "Import JSON"
+msgstr "JSON importieren"
+
+#: views/admin-settings.php:274
+msgid "Cache statistics"
+msgstr "Cache-Statistik"
+
+#: views/admin-settings.php:276
+msgid "segments cached"
+msgstr "Segmente im Cache"
+
+#: views/admin-settings.php:277
+msgid "confirmed"
+msgstr "bestätigt"
+
+#: views/admin-settings.php:278
+msgid "edited"
+msgstr "bearbeitet"
+
+#: views/admin-settings.php:279
+msgid "auto"
+msgstr "auto"
+
+#: views/admin-settings.php:280
+msgid "API calls"
+msgstr "API-Aufrufe"
+
+#: views/admin-settings.php:281
+msgid "cache hits"
+msgstr "Cache-Treffer"
+
+#: views/admin-settings.php:282
+msgid "cache hit rate"
+msgstr "Cache-Trefferquote"
+
+#: views/admin-settings.php:283
+msgid "API calls saved (≈ cache hits)"
+msgstr "Gesparte API-Aufrufe (≈ Cache-Treffer)"
+
+#: blocks/language-switcher/block.json
+msgctxt "block title"
+msgid "Language Switcher"
+msgstr "Sprachumschalter"
+
+#: blocks/language-switcher/block.json
+msgctxt "block description"
+msgid "Switch between Budget Translator languages."
+msgstr "Zwischen den Sprachen von Budget Translator wechseln."
+
+#: blocks/language-switcher/block.json
+msgctxt "block keyword"
+msgid "language"
+msgstr "sprache"
+
+#: blocks/language-switcher/block.json
+msgctxt "block keyword"
+msgid "translation"
+msgstr "übersetzung"
+
+#: blocks/language-switcher/block.json
+msgctxt "block keyword"
+msgid "switcher"
+msgstr "umschalter"

@@ -58,11 +58,14 @@ final class Assets {
 					'error'        => __( 'Something went wrong.', 'budget-translator' ),
 					'running'      => __( 'Translation job running…', 'budget-translator' ),
 					'done'         => __( 'Translation job finished.', 'budget-translator' ),
-					'purged'       => __( 'Invalid API messages removed.', 'budget-translator' ),
 					'retranslated' => __( 'Retranslated.', 'budget-translator' ),
 					'allDone'      => __( 'Nothing left to review.', 'budget-translator' ),
+					'queued'       => __( 'Post queued for translation.', 'budget-translator' ),
+					'progress'     => __( 'Site queue: %1$d / %2$d (%3$s%%)', 'budget-translator' ),
+					'queueNote'    => __( 'Queue progress is machine translation only — it does not confirm segments.', 'budget-translator' ),
 				),
 				'focusUrl' => esc_url_raw( admin_url( 'admin.php?page=budget-translator-focus' ) ),
+				'settingsUrl' => esc_url_raw( admin_url( 'admin.php?page=budget-translator-settings' ) ),
 			)
 		);
 	}

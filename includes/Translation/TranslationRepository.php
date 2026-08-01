@@ -102,23 +102,39 @@ final class TranslationRepository {
 	): int {
 		global $wpdb;
 
-		$hash = $this->hash( $source_lang, $target_lang, $source_text );
+		$hash     = $this->hash( $source_lang, $target_lang, $source_text );
 		$existing = $this->find_by_hash( $hash );
+
+		// Collation twin: same langs + source_text under MySQL unicode_ci, different PHP hash
+		// (e.g. "..." vs "…", or case-only differences). Merge into one row.
+		if ( ! $existing ) {
+			$existing = $this->find_collation_match( $source_lang, $target_lang, $source_text );
+			if ( $existing ) {
+				$this->delete_collation_siblings( $source_lang, $target_lang, $source_text, (int) $existing->id );
+			}
+		}
 
 		if ( $existing ) {
 			if ( ! $force && in_array( $existing->status, array( 'confirmed', 'edited' ), true ) && 'auto' === $status ) {
+				// Still canonicalize source/hash when the twin used a different byte form.
+				if ( (string) $existing->hash !== $hash || (string) $existing->source_text !== $source_text ) {
+					$this->canonicalize_row_source( (int) $existing->id, $source_text, $hash );
+				}
 				return (int) $existing->id;
 			}
 
+			$data = array(
+				'source_text'     => $source_text,
+				'translated_text' => $translated,
+				'status'          => $status,
+				'provider'        => $provider,
+				'hash'            => $hash,
+			);
 			$wpdb->update(
 				$this->table(),
-				array(
-					'translated_text' => $translated,
-					'status'          => $status,
-					'provider'        => $provider,
-				),
+				$data,
 				array( 'id' => (int) $existing->id ),
-				array( '%s', '%s', '%s' ),
+				array( '%s', '%s', '%s', '%s', '%s' ),
 				array( '%d' )
 			);
 
@@ -140,6 +156,234 @@ final class TranslationRepository {
 		);
 
 		return (int) $wpdb->insert_id;
+	}
+
+	/**
+	 * Find a row MySQL considers equal for (langs + source_text), preferring confirmed/edited.
+	 *
+	 * @param string $source_lang Source language.
+	 * @param string $target_lang Target language.
+	 * @param string $source_text Source segment.
+	 */
+	public function find_collation_match( string $source_lang, string $target_lang, string $source_text ): ?object {
+		global $wpdb;
+
+		$row = $wpdb->get_row(
+			$wpdb->prepare(
+				'SELECT * FROM ' . $this->table() . ' WHERE source_lang = %s AND target_lang = %s AND source_text = %s
+				ORDER BY CASE status WHEN %s THEN 0 WHEN %s THEN 1 ELSE 2 END, id DESC
+				LIMIT 1',
+				$source_lang,
+				$target_lang,
+				$source_text,
+				'confirmed',
+				'edited'
+			)
+		);
+
+		return $row ?: null;
+	}
+
+	/**
+	 * Delete other rows that match langs+source under DB collation, keeping one id.
+	 *
+	 * @param string $source_lang Source language.
+	 * @param string $target_lang Target language.
+	 * @param string $source_text Source segment.
+	 * @param int    $keep_id     Row to keep.
+	 */
+	public function delete_collation_siblings( string $source_lang, string $target_lang, string $source_text, int $keep_id ): int {
+		global $wpdb;
+
+		$ids = $wpdb->get_col(
+			$wpdb->prepare(
+				'SELECT id FROM ' . $this->table() . ' WHERE source_lang = %s AND target_lang = %s AND source_text = %s AND id <> %d',
+				$source_lang,
+				$target_lang,
+				$source_text,
+				$keep_id
+			)
+		);
+
+		return $this->delete_ids( array_map( 'intval', $ids ?: array() ) );
+	}
+
+	/**
+	 * Rewrite source_text/hash when a collation twin is folded to the canonical form.
+	 *
+	 * @param int    $id          Row ID.
+	 * @param string $source_text Canonical source.
+	 * @param string $hash        Canonical hash.
+	 */
+	private function canonicalize_row_source( int $id, string $source_text, string $hash ): void {
+		global $wpdb;
+
+		$conflict = $this->find_by_hash( $hash );
+		if ( $conflict && (int) $conflict->id !== $id ) {
+			// Canonical hash already owned elsewhere — drop this twin.
+			$this->delete_ids( array( $id ) );
+			return;
+		}
+
+		$wpdb->update(
+			$this->table(),
+			array(
+				'source_text' => $source_text,
+				'hash'        => $hash,
+			),
+			array( 'id' => $id ),
+			array( '%s', '%s' ),
+			array( '%d' )
+		);
+	}
+
+	/**
+	 * Merge rows that MySQL collation treats as the same source (different PHP hashes).
+	 *
+	 * @return int Number of duplicate rows deleted.
+	 */
+	public function dedupe_collation_duplicates(): int {
+		global $wpdb;
+
+		$table  = $this->table();
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$groups = $wpdb->get_results(
+			"SELECT source_lang, target_lang, source_text, COUNT(*) AS c, GROUP_CONCAT(id ORDER BY id) AS ids
+			FROM {$table}
+			GROUP BY source_lang, target_lang, source_text
+			HAVING c > 1"
+		);
+
+		if ( ! $groups ) {
+			return 0;
+		}
+
+		$deleted = 0;
+		foreach ( $groups as $group ) {
+			$ids = array_values(
+				array_filter(
+					array_map( 'intval', explode( ',', (string) $group->ids ) )
+				)
+			);
+			if ( count( $ids ) < 2 ) {
+				continue;
+			}
+
+			$placeholders = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+			$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM ' . $table . " WHERE id IN ({$placeholders})", ...$ids ) );
+			if ( ! $rows || count( $rows ) < 2 ) {
+				continue;
+			}
+
+			$winner = $this->pick_dedupe_winner( $rows );
+			$losers = array();
+			foreach ( $rows as $row ) {
+				if ( (int) $row->id !== (int) $winner->id ) {
+					$losers[] = (int) $row->id;
+				}
+			}
+
+			$deleted += $this->delete_ids( $losers );
+
+			// Fold winner source to the current normalizer so future hashes match.
+			$canonical = ( new SegmentExtractor() )->normalize( (string) $winner->source_text );
+			if ( '' !== $canonical && $canonical !== (string) $winner->source_text ) {
+				$hash = $this->hash( (string) $winner->source_lang, (string) $winner->target_lang, $canonical );
+				$this->canonicalize_row_source( (int) $winner->id, $canonical, $hash );
+			}
+		}
+
+		return $deleted;
+	}
+
+	/**
+	 * Auto-confirm passthrough autos that are not real cross-language translations.
+	 *
+	 * Typical case: English left in a DE post (or MyMemory echoed English). The text is
+	 * correct for /en/ as-is — mark confirmed so review does not ask for Confirm.
+	 * Also heals technical codes garbled by providers (R1,R2 → R1:R2) back to source.
+	 *
+	 * Rules (no ML):
+	 * - auto + source_lang ≠ target_lang + source_text === translated_text → confirmed
+	 * - auto + source already looks like the target language → confirmed (translated = source)
+	 * - auto + source looks like a technical token → confirmed (translated = source, provider passthrough)
+	 *
+	 * @return int Rows upgraded to confirmed.
+	 */
+	public function confirm_already_target_passthrough_autos(): int {
+		global $wpdb;
+
+		$table = $this->table();
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$rows  = $wpdb->get_results(
+			"SELECT id, source_lang, target_lang, source_text, translated_text, provider
+			FROM {$table}
+			WHERE status = 'auto'"
+		);
+
+		$updated = 0;
+		foreach ( $rows ?: array() as $row ) {
+			$source_lang = (string) $row->source_lang;
+			$target_lang = (string) $row->target_lang;
+			if ( $source_lang === $target_lang ) {
+				continue;
+			}
+
+			$source     = (string) $row->source_text;
+			$trans      = (string) $row->translated_text;
+			$looks      = LanguageHint::already_in_target( $source, $source_lang, $target_lang );
+			$technical  = SegmentExtractor::looks_like_technical_token( $source );
+
+			if ( $source !== $trans && ! $looks && ! $technical ) {
+				continue;
+			}
+
+			$provider = (string) ( $row->provider ?: 'passthrough' );
+			if ( $technical ) {
+				$provider = 'passthrough';
+			}
+
+			$this->upsert(
+				$source_lang,
+				$target_lang,
+				$source,
+				$source,
+				$provider,
+				'confirmed',
+				true
+			);
+			++$updated;
+		}
+
+		return $updated;
+	}
+
+	/**
+	 * Prefer confirmed/edited and real translations over passthrough auto rows.
+	 *
+	 * @param list<object> $rows Duplicate group.
+	 */
+	private function pick_dedupe_winner( array $rows ): object {
+		$rank = static function ( object $row ): array {
+			$status = (string) $row->status;
+			$status_rank = match ( $status ) {
+				'confirmed' => 0,
+				'edited'    => 1,
+				default     => 2,
+			};
+			$passthrough = ( (string) $row->source_text === (string) $row->translated_text ) ? 1 : 0;
+			return array( $status_rank, $passthrough, -(int) $row->id );
+		};
+
+		usort(
+			$rows,
+			static function ( object $a, object $b ) use ( $rank ): int {
+				return $rank( $a ) <=> $rank( $b );
+			}
+		);
+
+		return $rows[0];
 	}
 
 	/**
@@ -202,12 +446,18 @@ final class TranslationRepository {
 			'status'          => $status,
 			'hash'            => $new_hash,
 		);
+		$formats = array( '%s', '%s', '%s', '%s' );
+
+		if ( $source_changed ) {
+			$data['previous_source_text'] = $old_source;
+			$formats[]                     = '%s';
+		}
 
 		$result = $wpdb->update(
 			$this->table(),
 			$data,
 			array( 'id' => $id ),
-			array( '%s', '%s', '%s', '%s' ),
+			$formats,
 			array( '%d' )
 		);
 
@@ -252,11 +502,12 @@ final class TranslationRepository {
 			$ok = $wpdb->update(
 				$this->table(),
 				array(
-					'source_text' => $new_source,
-					'hash'        => $hash,
+					'source_text'          => $new_source,
+					'hash'                 => $hash,
+					'previous_source_text' => $old_source,
 				),
 				array( 'id' => (int) $row->id ),
-				array( '%s', '%s' ),
+				array( '%s', '%s', '%s' ),
 				array( '%d' )
 			);
 			if ( false !== $ok ) {
@@ -281,7 +532,7 @@ final class TranslationRepository {
 		}
 
 		$placeholders = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
-		$sql          = 'UPDATE ' . $this->table() . " SET status = 'confirmed' WHERE id IN ({$placeholders})";
+		$sql = 'UPDATE ' . $this->table() . " SET status = 'confirmed', previous_source_text = NULL WHERE id IN ({$placeholders})";
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 		return (int) $wpdb->query( $wpdb->prepare( $sql, ...$ids ) );
 	}
@@ -321,6 +572,16 @@ final class TranslationRepository {
 		$sql          = 'DELETE FROM ' . $this->table() . " WHERE id IN ({$placeholders})";
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 		return (int) $wpdb->query( $wpdb->prepare( $sql, ...$ids ) );
+	}
+
+	/**
+	 * Remove junk cache rows (invalid API payloads + code/console/shortcode segments).
+	 * Same criteria as the former Translations purge buttons; run on review open.
+	 *
+	 * @return int Total rows deleted.
+	 */
+	public function purge_junk_autos(): int {
+		return $this->delete_invalid_api_payloads() + $this->delete_code_like_payloads();
 	}
 
 	/**
@@ -384,9 +645,104 @@ final class TranslationRepository {
 	}
 
 	/**
+	 * Delete cached rows whose source looks like code, console prompts, or shortcodes.
+	 */
+	public function delete_code_like_payloads(): int {
+		global $wpdb;
+
+		$table = $this->table();
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$rows = $wpdb->get_results( "SELECT id, source_text FROM {$table}" );
+		$ids  = array();
+
+		foreach ( $rows as $row ) {
+			$source = (string) $row->source_text;
+			if (
+				SegmentExtractor::looks_like_code( $source )
+				|| ShortcodeGuard::is_protected_segment( $source )
+				|| SegmentExtractor::looks_like_opaque_id( $source )
+			) {
+				$ids[] = (int) $row->id;
+			}
+		}
+
+		return $this->delete_ids( $ids );
+	}
+
+	/**
+	 * Find rows matching source texts for a target language.
+	 *
+	 * @param list<string> $sources     Source segments.
+	 * @param string       $source_lang Source language.
+	 * @param string       $target_lang Target language.
+	 * @param string       $status      Optional status filter (pending|auto|edited|confirmed|'').
+	 * @return list<object>
+	 */
+	public function find_for_sources( array $sources, string $source_lang, string $target_lang, string $status = '' ): array {
+		$hashes = array();
+		foreach ( $sources as $source ) {
+			$source = (string) $source;
+			if ( '' === trim( $source ) ) {
+				continue;
+			}
+			$hashes[] = $this->hash( $source_lang, $target_lang, $source );
+		}
+
+		$map = $this->find_by_hashes( $hashes );
+		$out = array_values( $map );
+
+		if ( 'pending' === $status ) {
+			$out = array_values(
+				array_filter(
+					$out,
+					static fn( object $row ): bool => in_array( (string) $row->status, array( 'auto', 'edited' ), true )
+				)
+			);
+		} elseif ( in_array( $status, array( 'auto', 'edited', 'confirmed' ), true ) ) {
+			$out = array_values(
+				array_filter(
+					$out,
+					static fn( object $row ): bool => (string) $row->status === $status
+				)
+			);
+		}
+
+		usort(
+			$out,
+			static fn( object $a, object $b ): int => (int) $a->id <=> (int) $b->id
+		);
+
+		return $out;
+	}
+
+	/**
+	 * Allowed review-list sort keys → SQL ORDER BY clause (no user input).
+	 *
+	 * @return array<string, string>
+	 */
+	public static function review_order_by_map(): array {
+		return array(
+			'newest'   => 'updated_at DESC, id DESC',
+			'oldest'   => 'updated_at ASC, id ASC',
+			'shortest' => 'CHAR_LENGTH(source_text) ASC, id ASC',
+			'longest'  => 'CHAR_LENGTH(source_text) DESC, id DESC',
+		);
+	}
+
+	/**
+	 * Resolve a review sort key to a safe ORDER BY clause.
+	 *
+	 * @param string $sort Sort key (newest|oldest|shortest|longest).
+	 */
+	public static function review_order_by_sql( string $sort ): string {
+		$map = self::review_order_by_map();
+		return $map[ $sort ] ?? $map['newest'];
+	}
+
+	/**
 	 * Query rows for review UI.
 	 *
-	 * @param array{status?:string,lang?:string,search?:string,page?:int,per?:int} $args Args.
+	 * @param array{status?:string,lang?:string,search?:string,sort?:string,page?:int,per?:int} $args Args.
 	 * @return array{items: list<object>, total: int, pages: int}
 	 */
 	public function query( array $args ): array {
@@ -395,6 +751,7 @@ final class TranslationRepository {
 		$status = $args['status'] ?? '';
 		$lang   = $args['lang'] ?? '';
 		$search = $args['search'] ?? '';
+		$sort   = sanitize_key( (string) ( $args['sort'] ?? 'newest' ) );
 		$page   = max( 1, (int) ( $args['page'] ?? 1 ) );
 		$per    = max( 1, min( 100, (int) ( $args['per'] ?? 20 ) ) );
 		$offset = ( $page - 1 ) * $per;
@@ -422,6 +779,7 @@ final class TranslationRepository {
 		}
 
 		$where_sql = implode( ' AND ', $where );
+		$order_sql = self::review_order_by_sql( $sort );
 		$table     = $this->table();
 
 		$count_sql = "SELECT COUNT(*) FROM {$table} WHERE {$where_sql}";
@@ -433,7 +791,8 @@ final class TranslationRepository {
 			$total = (int) $wpdb->get_var( $count_sql );
 		}
 
-		$list_sql = "SELECT * FROM {$table} WHERE {$where_sql} ORDER BY updated_at DESC LIMIT %d OFFSET %d";
+		// ORDER BY is from a fixed whitelist (review_order_by_sql), not user input.
+		$list_sql = "SELECT * FROM {$table} WHERE {$where_sql} ORDER BY {$order_sql} LIMIT %d OFFSET %d";
 		$list_params = array_merge( $params, array( $per, $offset ) );
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 		$items = $wpdb->get_results( $wpdb->prepare( $list_sql, ...$list_params ) );
@@ -622,5 +981,86 @@ final class TranslationRepository {
 	 */
 	public function increment_cache_hits( int $by = 1 ): void {
 		update_option( 'bt_cache_hits', (int) get_option( 'bt_cache_hits', 0 ) + $by, false );
+	}
+
+	/**
+	 * Export all rows for backup.
+	 *
+	 * @return list<array<string, mixed>>
+	 */
+	public function export_all(): array {
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$rows = $wpdb->get_results( 'SELECT hash, source_lang, target_lang, source_text, translated_text, status, provider FROM ' . $this->table() . ' ORDER BY id ASC', ARRAY_A );
+		if ( ! is_array( $rows ) ) {
+			return array();
+		}
+
+		return array_map(
+			static function ( array $row ): array {
+				return array(
+					'hash'            => (string) ( $row['hash'] ?? '' ),
+					'source_lang'     => (string) ( $row['source_lang'] ?? '' ),
+					'target_lang'     => (string) ( $row['target_lang'] ?? '' ),
+					'source_text'     => (string) ( $row['source_text'] ?? '' ),
+					'translated_text' => (string) ( $row['translated_text'] ?? '' ),
+					'status'          => (string) ( $row['status'] ?? 'auto' ),
+					'provider'        => (string) ( $row['provider'] ?? '' ),
+				);
+			},
+			$rows
+		);
+	}
+
+	/**
+	 * Import rows from export payload.
+	 *
+	 * @param list<mixed> $items          Items.
+	 * @param bool        $skip_confirmed Skip overwriting confirmed rows.
+	 * @return array{imported:int,skipped:int}
+	 */
+	public function import_items( array $items, bool $skip_confirmed = true ): array {
+		$imported = 0;
+		$skipped  = 0;
+
+		foreach ( $items as $item ) {
+			if ( ! is_array( $item ) ) {
+				++$skipped;
+				continue;
+			}
+
+			$source_lang = sanitize_key( (string) ( $item['source_lang'] ?? '' ) );
+			$target_lang = sanitize_key( (string) ( $item['target_lang'] ?? '' ) );
+			$source_text = (string) ( $item['source_text'] ?? '' );
+			$translated  = (string) ( $item['translated_text'] ?? '' );
+			$status      = sanitize_key( (string) ( $item['status'] ?? 'auto' ) );
+			$provider    = sanitize_key( (string) ( $item['provider'] ?? 'import' ) );
+
+			if ( '' === $source_lang || '' === $target_lang || '' === $source_text || '' === $translated ) {
+				++$skipped;
+				continue;
+			}
+
+			if ( ! in_array( $status, array( 'auto', 'edited', 'confirmed' ), true ) ) {
+				$status = 'auto';
+			}
+
+			$hash     = $this->hash( $source_lang, $target_lang, $source_text );
+			$existing = $this->find_by_hash( $hash );
+
+			if ( $existing && $skip_confirmed && 'confirmed' === (string) $existing->status ) {
+				++$skipped;
+				continue;
+			}
+
+			$this->upsert( $source_lang, $target_lang, $source_text, $translated, $provider ?: 'import', $status, true );
+			++$imported;
+		}
+
+		return array(
+			'imported' => $imported,
+			'skipped'  => $skipped,
+		);
 	}
 }

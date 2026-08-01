@@ -12,6 +12,7 @@ namespace BudgetTranslator\Rest;
 use BudgetTranslator\Translation\ProviderFactory;
 use BudgetTranslator\Translation\SourcePropagator;
 use BudgetTranslator\Translation\TranslationRepository;
+use BudgetTranslator\Translation\TranslationService;
 use WP_REST_Request;
 use WP_REST_Response;
 
@@ -88,18 +89,6 @@ final class ReviewController {
 				array(
 					'methods'             => 'POST',
 					'callback'            => array( $this, 'confirm' ),
-					'permission_callback' => array( $this, 'can_manage' ),
-				),
-			)
-		);
-
-		register_rest_route(
-			'budget-translator/v1',
-			'/translations/purge-invalid',
-			array(
-				array(
-					'methods'             => 'POST',
-					'callback'            => array( $this, 'purge_invalid' ),
 					'permission_callback' => array( $this, 'can_manage' ),
 				),
 			)
@@ -232,16 +221,19 @@ final class ReviewController {
 		}
 
 		try {
-			$provider   = ProviderFactory::make();
-			$translated = $provider->translate(
-				(string) $row->source_text,
+			$service  = new TranslationService();
+			$provider = ProviderFactory::make();
+			$source   = (string) $row->source_text;
+			$translated = $service->translate_via_provider(
+				$source,
 				(string) $row->source_lang,
-				(string) $row->target_lang
+				(string) $row->target_lang,
+				$provider
 			);
 			$repo->upsert(
 				(string) $row->source_lang,
 				(string) $row->target_lang,
-				(string) $row->source_text,
+				$source,
 				$translated,
 				$provider->get_slug(),
 				'auto',
@@ -288,21 +280,6 @@ final class ReviewController {
 
 		$repo  = new TranslationRepository();
 		$count = $repo->confirm_ids( array_map( 'intval', $ids ) );
-
-		return new WP_REST_Response(
-			array(
-				'success' => true,
-				'count'   => $count,
-			)
-		);
-	}
-
-	/**
-	 * Remove auto-translations that contain provider error messages.
-	 */
-	public function purge_invalid(): WP_REST_Response {
-		$repo  = new TranslationRepository();
-		$count = $repo->delete_invalid_api_payloads();
 
 		return new WP_REST_Response(
 			array(

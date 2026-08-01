@@ -38,8 +38,49 @@ final class LanguageSwitcher {
 	public function register(): void {
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue' ) );
 		add_action( 'wp_footer', array( $this, 'render_footer_switcher' ), 20 );
+		add_action( 'init', array( $this, 'register_block' ) );
 		add_shortcode( 'bt_language_switcher', array( $this, 'shortcode' ) );
 		add_filter( 'wp_nav_menu_items', array( $this, 'append_to_menu' ), 20, 2 );
+	}
+
+	/**
+	 * Register Gutenberg block (PHP render, no npm build).
+	 */
+	public function register_block(): void {
+		wp_register_script(
+			'bt-language-switcher-editor',
+			BT_PLUGIN_URL . 'blocks/language-switcher/editor.js',
+			array( 'wp-blocks', 'wp-element', 'wp-block-editor', 'wp-server-side-render', 'wp-i18n' ),
+			BT_VERSION,
+			true
+		);
+
+		wp_register_style(
+			'bt-language-switcher-editor',
+			BT_PLUGIN_URL . 'blocks/language-switcher/style.css',
+			array(),
+			BT_VERSION
+		);
+
+		register_block_type(
+			BT_PLUGIN_DIR . 'blocks/language-switcher',
+			array(
+				'editor_script'   => 'bt-language-switcher-editor',
+				'editor_style'    => 'bt-language-switcher-editor',
+				'render_callback' => array( $this, 'render_block' ),
+			)
+		);
+	}
+
+	/**
+	 * Block render callback.
+	 *
+	 * @param array<string, mixed> $attributes Attributes.
+	 * @param string               $content    Content.
+	 */
+	public function render_block( array $attributes = array(), string $content = '' ): string {
+		unset( $attributes, $content );
+		return $this->render( 'bt-lang-switcher--block' );
 	}
 
 	/**

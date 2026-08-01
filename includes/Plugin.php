@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace BudgetTranslator;
 
 use BudgetTranslator\Admin\Assets;
+use BudgetTranslator\Admin\PostReviewPage;
 use BudgetTranslator\Admin\ReviewPage;
 use BudgetTranslator\Admin\SettingsPage;
 use BudgetTranslator\Frontend\ContentFilters;
@@ -18,6 +19,7 @@ use BudgetTranslator\Frontend\LanguageSwitcher;
 use BudgetTranslator\Frontend\Rewrites;
 use BudgetTranslator\Rest\ReviewController;
 use BudgetTranslator\Rest\TranslateJobController;
+use BudgetTranslator\Translation\ContentChangeListener;
 use BudgetTranslator\Translation\TranslateJob;
 
 /**
@@ -80,11 +82,13 @@ final class Plugin {
 		( new Rewrites( $detector ) )->register();
 		( new ContentFilters( $detector ) )->register();
 		( new LanguageSwitcher( $detector ) )->register();
+		( new ContentChangeListener() )->register();
 
 		if ( is_admin() ) {
 			( new Assets() )->register();
-			( new SettingsPage() )->register();
 			( new ReviewPage() )->register();
+			( new PostReviewPage() )->register();
+			( new SettingsPage() )->register();
 		}
 
 		( new ReviewController() )->register();

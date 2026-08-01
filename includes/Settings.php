@@ -35,6 +35,20 @@ final class Settings {
 			'enable_rewrites'      => 1,
 			'on_the_fly'           => 1,
 			'language_switcher'    => 1,
+			'do_not_translate'     => '',
+			'glossary'             => array(),
+			'excluded_post_types'  => array(),
+			'excluded_post_ids'    => '',
+			'excluded_paths'       => '',
+			'auto_queue_on_save'        => 1,
+			'show_partial_notice'       => 0,
+			'source_autocorrect'        => 1,
+			'source_autocorrect_rules'  => array(
+				'space_before_punct'   => 1,
+				'collapse_spaces'      => 1,
+				'no_space_at_linebreak' => 1,
+				'capitalize_sentences' => 1,
+			),
 		);
 	}
 
@@ -154,5 +168,127 @@ final class Settings {
 	 */
 	public static function all_langs(): array {
 		return array_values( array_unique( array_merge( array( self::source_lang() ), self::target_langs() ) ) );
+	}
+
+	/**
+	 * Excluded post type slugs.
+	 *
+	 * @return list<string>
+	 */
+	public static function excluded_post_types(): array {
+		$types = self::get( 'excluded_post_types', array() );
+		if ( ! is_array( $types ) ) {
+			return array();
+		}
+
+		return array_values( array_filter( array_map( 'strval', $types ) ) );
+	}
+
+	/**
+	 * Excluded post IDs.
+	 *
+	 * @return list<int>
+	 */
+	public static function excluded_post_ids(): array {
+		$raw = (string) self::get( 'excluded_post_ids', '' );
+		if ( '' === trim( $raw ) ) {
+			return array();
+		}
+
+		$parts = preg_split( '/[\s,]+/', $raw ) ?: array();
+		$ids   = array();
+		foreach ( $parts as $part ) {
+			$id = (int) $part;
+			if ( $id > 0 ) {
+				$ids[] = $id;
+			}
+		}
+
+		return array_values( array_unique( $ids ) );
+	}
+
+	/**
+	 * Excluded URL path prefixes (relative, leading slash).
+	 *
+	 * @return list<string>
+	 */
+	public static function excluded_paths(): array {
+		$raw   = (string) self::get( 'excluded_paths', '' );
+		$lines = preg_split( '/\r\n|\r|\n/', $raw ) ?: array();
+		$out   = array();
+		foreach ( $lines as $line ) {
+			$line = trim( $line );
+			if ( '' === $line || str_starts_with( $line, '#' ) ) {
+				continue;
+			}
+			$path = '/' . ltrim( $line, '/' );
+			$out[] = untrailingslashit( $path ) ?: '/';
+		}
+
+		return array_values( array_unique( $out ) );
+	}
+
+	/**
+	 * Whether a post should be skipped.
+	 *
+	 * @param int $post_id Post ID.
+	 */
+	public static function is_excluded_post( int $post_id ): bool {
+		if ( $post_id <= 0 ) {
+			return false;
+		}
+
+		if ( in_array( $post_id, self::excluded_post_ids(), true ) ) {
+			return true;
+		}
+
+		$type = get_post_type( $post_id );
+		if ( $type && in_array( $type, self::excluded_post_types(), true ) ) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Whether the current frontend request path is excluded.
+	 */
+	public static function is_excluded_request(): bool {
+		$paths = self::excluded_paths();
+		if ( array() === $paths ) {
+			return false;
+		}
+
+		$uri  = isset( $_SERVER['REQUEST_URI'] ) ? (string) wp_unslash( $_SERVER['REQUEST_URI'] ) : '/';
+		$path = (string) ( wp_parse_url( $uri, PHP_URL_PATH ) ?? '/' );
+		$home = untrailingslashit( (string) wp_parse_url( home_url( '/' ), PHP_URL_PATH ) );
+		if ( $home && str_starts_with( $path, $home ) ) {
+			$path = substr( $path, strlen( $home ) ) ?: '/';
+		}
+		$path = '/' . ltrim( $path, '/' );
+
+		// Strip language prefix for matching.
+		foreach ( self::target_langs() as $lang ) {
+			$prefix = '/' . $lang;
+			if ( $path === $prefix || $path === $prefix . '/' ) {
+				$path = '/';
+				break;
+			}
+			if ( str_starts_with( $path, $prefix . '/' ) ) {
+				$path = substr( $path, strlen( $prefix ) ) ?: '/';
+				break;
+			}
+		}
+
+		foreach ( $paths as $excluded ) {
+			if ( '/' === $excluded ) {
+				continue;
+			}
+			if ( $path === $excluded || str_starts_with( $path, $excluded . '/' ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }

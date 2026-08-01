@@ -68,7 +68,7 @@ final class LinkGuard {
 					$token = $parts[1];
 					$trail = $parts[2];
 				}
-				$key         = '⟦BT' . $index . '⟧';
+				$key         = TokenPlaceholder::make( 'BTL', $index );
 				$map[ $key ] = $token;
 				++$index;
 				return $key . $trail;
@@ -82,37 +82,10 @@ final class LinkGuard {
 	/**
 	 * Restore placeholders after translation.
 	 *
-	 * @param string               $text Translated text.
-	 * @param array<string,string> $map  Placeholder map.
+	 * @param string                $text Translated text.
+	 * @param array<string, string> $map  Placeholder map.
 	 */
 	public static function unmask( string $text, array $map ): string {
-		if ( array() === $map ) {
-			return $text;
-		}
-
-		// Restore exact keys first.
-		$text = strtr( $text, $map );
-
-		// Providers sometimes alter brackets/spacing around placeholders.
-		foreach ( $map as $key => $original ) {
-			$num = null;
-			if ( preg_match( '/BT(\d+)/', $key, $m ) ) {
-				$num = $m[1];
-			}
-			if ( null === $num ) {
-				continue;
-			}
-			$patterns = array(
-				'/⟦\s*BT\s*' . preg_quote( $num, '/' ) . '\s*⟧/iu',
-				'/\[\s*BT\s*' . preg_quote( $num, '/' ) . '\s*\]/iu',
-				'/\(\s*BT\s*' . preg_quote( $num, '/' ) . '\s*\)/iu',
-				'/\bBT\s*' . preg_quote( $num, '/' ) . '\b/iu',
-			);
-			foreach ( $patterns as $pattern ) {
-				$text = preg_replace( $pattern, $original, $text ) ?? $text;
-			}
-		}
-
-		return $text;
+		return TokenPlaceholder::restore( $text, $map, 'BTL' );
 	}
 }

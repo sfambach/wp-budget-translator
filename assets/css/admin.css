@@ -37,12 +37,50 @@
 	border-left: 4px solid #2271b1;
 }
 
+.bt-progress {
+	margin-top: 8px;
+	height: 8px;
+	max-width: 420px;
+	background: #dcdcde;
+	border-radius: 2px;
+	overflow: hidden;
+}
+
+.bt-progress__bar {
+	display: block;
+	height: 100%;
+	background: #2271b1;
+	border-radius: 2px;
+}
+
+.bt-progress--inline {
+	margin-top: 4px;
+	max-width: 140px;
+}
+
+.bt-by-post-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+	margin: 12px 0;
+}
+
+.bt-inline-form {
+	display: inline;
+	margin: 0;
+}
+
 .bt-review-filters {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 8px;
 	align-items: center;
 	margin: 16px 0;
+}
+
+.bt-row-missing td {
+	background: #fcf9e8;
 }
 
 .bt-review-table {
@@ -142,6 +180,28 @@
 
 .bt-focus__count {
 	margin-left: 10px;
+}
+
+.bt-source-diff {
+	margin: 0 0 8px;
+	padding: 8px 10px;
+	background: #f6f7f7;
+	border-left: 3px solid #2271b1;
+	font-family: Consolas, Monaco, monospace;
+	font-size: 12px;
+	line-height: 1.45;
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.bt-diff-del {
+	background: #fcd2d2;
+	text-decoration: line-through;
+}
+
+.bt-diff-ins {
+	background: #c7f0d2;
+	text-decoration: none;
 }
 
 @media (max-width: 960px) {
