@@ -27,6 +27,10 @@ Affordable WordPress website translation with local segment caching.
 - WordPress 6.0+
 - PHP 8.0+
 
+## Documentation
+
+User handbook (GitHub Wiki): https://github.com/sfambach/wp-budget-translator/wiki
+
 ## Installation
 
 1. Copy this folder to `wp-content/plugins/budget-translator`
